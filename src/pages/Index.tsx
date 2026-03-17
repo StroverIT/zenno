@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,18 +15,8 @@ import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
-import heroImage from '@/assets/hero-yoga.jpg';
-import studio1Img from '@/assets/studio-1.jpg';
-import studio2Img from '@/assets/studio-2.jpg';
-import studio3Img from '@/assets/studio-3.jpg';
-import studio4Img from '@/assets/studio-4.jpg';
-import studio5Img from '@/assets/studio-5.jpg';
-import studio6Img from '@/assets/studio-6.jpg';
 
-const studioImages: Record<string, string> = {
-  s1: studio1Img, s2: studio2Img, s3: studio3Img,
-  s4: studio4Img, s5: studio5Img, s6: studio6Img,
-};
+const getStudioImageSrc = (studioId: string) => `/homepage/studio-${studioId.slice(1)}.jpg`;
 
 const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -59,7 +50,7 @@ const Index = () => {
       {/* ─── HERO ─── */}
       <section className="relative overflow-hidden py-20 md:py-32">
         <div className="absolute inset-0">
-          <img src={heroImage} alt="Yoga studio" className="w-full h-full object-cover" />
+          <Image src="/homepage/hero-yoga.jpg" alt="Yoga studio" fill className="object-cover" sizes="100vw" />
           <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px]" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
@@ -78,10 +69,10 @@ const Index = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl gap-2">
-                  <Link to="/discover"><Search className="h-4 w-4" /> Открий студио</Link>
+                  <Link href="/discover"><Search className="h-4 w-4" /> Открий студио</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="text-base px-8 py-6 rounded-xl">
-                  <Link to="/auth">Добави своето студио <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                  <Link href="/auth">Добави своето студио <ArrowRight className="ml-1 h-4 w-4" /></Link>
                 </Button>
               </div>
             </motion.div>
@@ -126,13 +117,13 @@ const Index = () => {
             {YOGA_TYPES.slice(0, 8).map(type => (
               <Link
                 key={type}
-                to={`/discover?type=${type}`}
+                href={`/discover?type=${type}`}
                 className="shrink-0 px-4 py-2 rounded-full border border-border bg-background text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-all"
               >
                 {type}
               </Link>
             ))}
-            <Link to="/discover" className="shrink-0 flex items-center gap-1 px-4 py-2 text-sm font-medium text-primary hover:underline">
+            <Link href="/discover" className="shrink-0 flex items-center gap-1 px-4 py-2 text-sm font-medium text-primary hover:underline">
               Виж всички <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -178,7 +169,7 @@ const Index = () => {
               <p className="text-muted-foreground">Избрани от общността с най-много положителни отзиви</p>
             </div>
             <Button asChild variant="outline" className="hidden md:flex rounded-full gap-1">
-              <Link to="/discover">Виж всички <ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/discover">Виж всички <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
 
@@ -209,13 +200,15 @@ const Index = () => {
                     >
                       <Heart className={`h-4 w-4 transition-colors ${fav ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
                     </motion.button>
-                    <Link to={`/studio/${studio.id}`} className="block h-full">
+                    <Link href={`/studio/${studio.id}`} className="block h-full">
                       <div className="rounded-2xl border border-border bg-background overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
                         <div className="aspect-[16/10] relative overflow-hidden">
-                          <img
-                            src={studioImages[studio.id] || studio1Img}
+                          <Image
+                            src={getStudioImageSrc(studio.id)}
                             alt={studio.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           <div className="absolute bottom-3 left-3 flex gap-2">
                             <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-sm text-xs font-medium">
@@ -256,7 +249,7 @@ const Index = () => {
 
           <div className="text-center mt-4 md:hidden">
             <Button asChild variant="outline" className="rounded-full">
-              <Link to="/discover">Виж всички студиа <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link href="/discover">Виж всички студиа <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -272,7 +265,7 @@ const Index = () => {
               <p className="text-muted-foreground">Намери свободно място и се включи още тази седмица</p>
             </div>
             <Button asChild variant="outline" className="hidden md:flex rounded-full gap-1">
-              <Link to="/discover">Виж всички <ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/discover">Виж всички <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
 
@@ -288,7 +281,7 @@ const Index = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.08 }}
                 >
-                  <Link to={`/studio/${cls.studioId}`}>
+                  <Link href={`/studio/${cls.studioId}`}>
                     <div className="rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-all hover:-translate-y-0.5 flex gap-4">
                       {/* Date block */}
                       <div className="shrink-0 w-16 h-16 rounded-xl bg-primary/10 flex flex-col items-center justify-center">
@@ -368,7 +361,7 @@ const Index = () => {
               </p>
             </div>
             <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl shrink-0">
-              <Link to="/auth">Добави студио безплатно <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              <Link href="/auth">Добави студио безплатно <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
           </div>
         </div>

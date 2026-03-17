@@ -22,7 +22,7 @@ const StudioDetail = () => {
   if (!studio) return (
     <div className="container mx-auto px-4 py-20 text-center">
       <p className="text-lg text-muted-foreground">Студиото не е намерено.</p>
-      <Button asChild variant="ghost" className="mt-4"><Link to="/discover">Назад</Link></Button>
+      <Button asChild variant="ghost" className="mt-4"><Link href="/discover">Назад</Link></Button>
     </div>
   );
 
@@ -71,7 +71,7 @@ const StudioDetail = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link to="/discover" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
+      <Link href="/discover" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
         <ArrowLeft className="h-4 w-4" /> Обратно към търсене
       </Link>
 

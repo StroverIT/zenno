@@ -74,7 +74,7 @@ const Favorites = () => {
               Все още не сте запазили нито едно студио. Разгледайте нашия каталог и натиснете сърчицето, за да добавите студио в любими.
             </p>
             <Button asChild size="lg" className="rounded-xl gap-2">
-              <Link to="/discover"><Search className="h-4 w-4" /> Открий студио</Link>
+              <Link href="/discover"><Search className="h-4 w-4" /> Открий студио</Link>
             </Button>
           </motion.div>
         ) : (
@@ -97,7 +97,7 @@ const Favorites = () => {
                 >
                   <div className="flex flex-col md:flex-row">
                     {/* Image */}
-                    <Link to={`/studio/${studio.id}`} className="md:w-64 shrink-0">
+                    <Link href={`/studio/${studio.id}`} className="md:w-64 shrink-0">
                       <div className="aspect-[16/10] md:aspect-auto md:h-full bg-gradient-to-br from-sage/40 via-primary/15 to-warm/30 flex items-center justify-center relative">
                         <span className="text-6xl group-hover:scale-110 transition-transform">🧘</span>
                         {subscription?.hasMonthlySubscription && (
@@ -111,7 +111,7 @@ const Favorites = () => {
                     {/* Content */}
                     <div className="flex-1 p-5 md:p-6">
                       <div className="flex items-start justify-between gap-3">
-                        <Link to={`/studio/${studio.id}`} className="group">
+                        <Link href={`/studio/${studio.id}`} className="group">
                           <h3 className="font-display text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
                             {studio.name}
                           </h3>
@@ -185,7 +185,7 @@ const Favorites = () => {
                       {/* Action */}
                       <div className="mt-4">
                         <Button asChild variant="outline" size="sm" className="rounded-lg gap-1">
-                          <Link to={`/studio/${studio.id}`}>Виж разписание <ArrowRight className="h-3.5 w-3.5" /></Link>
+                          <Link href={`/studio/${studio.id}`}>Виж разписание <ArrowRight className="h-3.5 w-3.5" /></Link>
                         </Button>
                       </div>
                     </div>

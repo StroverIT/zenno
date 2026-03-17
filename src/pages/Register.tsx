@@ -71,7 +71,7 @@ const Register = () => {
           <Button type="submit" className="w-full">Регистрация</Button>
           <p className="text-center text-sm text-muted-foreground">
             Имате акаунт?{' '}
-            <Link to="/login" className="text-primary hover:underline font-medium">Влезте</Link>
+            <Link href="/login" className="text-primary hover:underline font-medium">Влезте</Link>
           </p>
         </form>
       </div>

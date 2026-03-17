@@ -22,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null;
     const stored = localStorage.getItem('yoga_user');
     return stored ? JSON.parse(stored) : null;
   });
@@ -36,18 +37,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       favorites: [],
     };
     setUser(mockUser);
-    localStorage.setItem('yoga_user', JSON.stringify(mockUser));
+    if (typeof window !== 'undefined') localStorage.setItem('yoga_user', JSON.stringify(mockUser));
   }, []);
 
   const register = useCallback(async (name: string, email: string, _password: string, role: UserRole) => {
     const mockUser: User = { id: `u_${Date.now()}`, name, email, role, favorites: [] };
     setUser(mockUser);
-    localStorage.setItem('yoga_user', JSON.stringify(mockUser));
+    if (typeof window !== 'undefined') localStorage.setItem('yoga_user', JSON.stringify(mockUser));
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem('yoga_user');
+    if (typeof window !== 'undefined') localStorage.removeItem('yoga_user');
   }, []);
 
   return (

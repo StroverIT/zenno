@@ -256,7 +256,7 @@ const DiscoverGrid = ({ studios, onAuthRequired }: { studios: typeof mockStudios
             >
               <Heart className={`h-4 w-4 transition-colors ${isFavorite(studio.id) ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
             </motion.button>
-            <Link to={`/studio/${studio.id}`} className="block h-full">
+            <Link href={`/studio/${studio.id}`} className="block h-full">
               <div className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 h-full flex flex-col">
                 <div className="aspect-[16/9] bg-gradient-to-br from-sage/40 via-primary/15 to-warm/30 flex items-center justify-center relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-card/40 to-transparent" />

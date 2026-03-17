@@ -7,6 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
+import Layout from "@/components/Layout";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <Layout>{children}</Layout>
+            </AuthProvider>
           </TooltipProvider>
         </QueryClientProvider>
       </body>

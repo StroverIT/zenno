@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart, User, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import AuthModal from "@/components/AuthModal";
-import logo from "@/assets/logo.png";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -29,7 +29,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             href="/"
             className="flex items-center gap-2 font-display text-2xl font-bold text-primary tracking-tight"
           >
-            <img src={logo} alt="YogaSpot" className="h-9 w-9 object-contain" />
+            <Image src="/homepage/logo.png" alt="YogaSpot" width={36} height={36} className="h-9 w-9 object-contain" />
             YogaSpot
           </Link>
 
@@ -126,7 +126,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-muted-foreground">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <img src={logo} alt="YogaSpot" className="h-8 w-8 object-contain" />
+              <Image src="/homepage/logo.png" alt="YogaSpot" width={32} height={32} className="h-8 w-8 object-contain" />
               <h4 className="font-display text-lg text-foreground">YogaSpot</h4>
             </div>
             <p>Твоят портал към йога студиа в България. Открий, запиши се и практикувай.</p>

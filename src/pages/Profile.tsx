@@ -131,7 +131,7 @@ const Profile = () => {
               <h3 className="font-display text-xl font-semibold text-foreground mb-2">Няма посетени класове</h3>
               <p className="text-muted-foreground mb-6">Запишете се за клас и той ще се появи тук след посещение.</p>
               <Button asChild variant="outline">
-                <Link to="/discover">Открий студио</Link>
+                <Link href="/discover">Открий студио</Link>
               </Button>
             </div>
           ) : (
@@ -200,7 +200,7 @@ const Profile = () => {
               <h3 className="font-display text-xl font-semibold text-foreground mb-2">Няма любими студиа</h3>
               <p className="text-muted-foreground mb-6">Натиснете ❤️ на студио, за да го добавите тук.</p>
               <Button asChild variant="outline">
-                <Link to="/discover">Открий студио</Link>
+                <Link href="/discover">Открий студио</Link>
               </Button>
             </div>
           ) : (
@@ -214,7 +214,7 @@ const Profile = () => {
                       </div>
                       <div className="flex-1 p-4 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <Link to={`/studio/${studio.id}`} className="min-w-0">
+                          <Link href={`/studio/${studio.id}`} className="min-w-0">
                             <h3 className="font-display font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                               {studio.name}
                             </h3>

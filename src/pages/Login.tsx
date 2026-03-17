@@ -49,7 +49,7 @@ const Login = () => {
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             Нямате акаунт?{' '}
-            <Link to="/register" className="text-primary hover:underline font-medium">Регистрирайте се</Link>
+            <Link href="/register" className="text-primary hover:underline font-medium">Регистрирайте се</Link>
           </p>
         </form>
       </div>
