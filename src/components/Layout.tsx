@@ -29,7 +29,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             href="/"
             className="flex items-center gap-2 font-display text-2xl font-bold text-primary tracking-tight "
           >
-            <div className="relative h-28 w-28 md:h-36 md:w-36">
+            <div className="relative h-28 w-28 md:h-36 md:w-36 -ml-10">
               <Image
                 src="/homepage/logo.png"
                 alt="Zenno"
@@ -135,9 +135,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <footer className="border-t border-border bg-card py-12">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-muted-foreground">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Image src="/homepage/logo.png" alt="Zenno" width={32} height={32} className="h-8 w-8 object-contain" />
-              <h4 className="font-display text-lg text-foreground">Zenno</h4>
+            <div className="flex items-center mb-3">
+              <div className="relative h-28 w-28 md:h-36 md:w-36 -ml-10">
+                <Image
+                  src="/homepage/logo.png"
+                  alt="Zenno"
+                  fill
+                  className="object-contain"
+                  sizes="10rem"
+                />
+              </div>
+              <h4 className="font-display text-lg text-foreground -ml-8">Zenno</h4>
             </div>
             <p>Твоят портал към йога студиа в България. Открий, запиши се и практикувай.</p>
           </div>
