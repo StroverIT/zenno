@@ -184,6 +184,28 @@ const Auth = () => {
 
             <div className="w-1/2 shrink-0 p-8">
               <form onSubmit={handleRegister} className="space-y-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-12 gap-3 text-base rounded-xl"
+                  onClick={async () => {
+                    try {
+                      await loginWithGoogle();
+                    } catch (err) {
+                      console.error(err);
+                      toast.error('Грешка при регистрация с Google.');
+                    }
+                  }}
+                >
+                  <Chrome className="h-5 w-5" />
+                  Регистрирайте се с Google
+                </Button>
+
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                  <div className="relative flex justify-center text-xs"><span className="bg-card px-3 text-muted-foreground">или с имейл</span></div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Тип акаунт</Label>
                   <div className="grid grid-cols-2 gap-3">
