@@ -15,7 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('client');
-  const { login, register } = useAuth();
+  const { login, loginWithGoogle, register } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -139,9 +139,12 @@ const Auth = () => {
                 variant="outline"
                 className="w-full h-12 gap-3 text-base rounded-xl"
                 onClick={async () => {
-                  await login('google.user@gmail.com', 'google');
-                  toast.success('Успешен вход с Google!');
-                  router.push('/');
+                  try {
+                    await loginWithGoogle();
+                  } catch (err) {
+                    console.error(err);
+                    toast.error('Грешка при вход с Google.');
+                  }
                 }}
               >
                 <Chrome className="h-5 w-5" />
