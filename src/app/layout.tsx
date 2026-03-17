@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body className="antialiased">
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <Toaster />
