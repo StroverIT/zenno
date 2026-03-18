@@ -22,6 +22,19 @@ export function StudioModal({
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [website, setWebsite] = useState('');
+  const [amenities, setAmenities] = useState({
+    parking: false,
+    shower: false,
+    changingRoom: false,
+    equipmentRental: false,
+  });
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [addressPredictions, setAddressPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
   const skipNextAddressGeocodeRef = useRef(false);
@@ -49,8 +62,19 @@ export function StudioModal({
     if (!open) return;
     // Reset transient errors when reopening.
     setAddressError(null);
+    setSubmitError(null);
+    setSubmitting(false);
+    setName('');
+    setDescription('');
+    setPhone('');
+    setEmail('');
+    setWebsite('');
+    setAmenities({ parking: false, shower: false, changingRoom: false, equipmentRental: false });
+    setCoords(null);
+    setAddress('');
     setAddressDropdownOpen(false);
     setAddressPredictions([]);
+    setImages([]);
   }, [open]);
 
   useEffect(() => {
@@ -202,6 +226,47 @@ export function StudioModal({
     };
   }, [imagePreviews]);
 
+  const handleSave = async () => {
+    if (submitting) return;
+    setSubmitError(null);
+    setSubmitting(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('address', address);
+      formData.append('description', description);
+      formData.append('phone', phone);
+      formData.append('email', email);
+      if (website.trim()) formData.append('website', website.trim());
+      if (coords) {
+        formData.append('lat', String(coords.lat));
+        formData.append('lng', String(coords.lng));
+      }
+
+      formData.append('amenitiesParking', String(amenities.parking));
+      formData.append('amenitiesShower', String(amenities.shower));
+      formData.append('amenitiesChangingRoom', String(amenities.changingRoom));
+      formData.append('amenitiesEquipmentRental', String(amenities.equipmentRental));
+
+      for (const file of images) {
+        formData.append('images', file);
+      }
+
+      const res = await fetch('/api/studios', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || `Failed to save studio (${res.status})`);
+      }
+
+      onSave();
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : 'Failed to save studio');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
@@ -210,7 +275,15 @@ export function StudioModal({
           <DialogDescription>Добавете или редактирайте информацията за вашето студио</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <div><Label>Име на студио</Label><Input placeholder="напр. Лотос Йога Студио" className="mt-1" /></div>
+          <div>
+            <Label>Име на студио</Label>
+            <Input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="напр. Лотос Йога Студио"
+              className="mt-1"
+            />
+          </div>
           <div className="space-y-2">
             <div>
               <Label>Адрес</Label>
@@ -315,7 +388,16 @@ export function StudioModal({
 
             {addressError ? <p className="text-sm text-destructive">{addressError}</p> : null}
           </div>
-          <div><Label>Описание</Label><Textarea placeholder="Опишете вашето студио..." className="mt-1" rows={3} /></div>
+          <div>
+            <Label>Описание</Label>
+            <Textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Опишете вашето студио..."
+              className="mt-1"
+              rows={3}
+            />
+          </div>
           <div className="space-y-2">
             <Label>Снимки</Label>
             <Input
@@ -331,7 +413,6 @@ export function StudioModal({
               <div className="grid grid-cols-3 gap-2">
                 {imagePreviews.map((p) => (
                   <div key={p.key} className="relative overflow-hidden rounded-lg border border-border bg-muted/20">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt={p.name} className="h-24 w-full object-cover" />
                   </div>
                 ))}
@@ -341,10 +422,35 @@ export function StudioModal({
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Телефон</Label><Input placeholder="+359 ..." className="mt-1" /></div>
-            <div><Label>Имейл</Label><Input type="email" placeholder="info@studio.bg" className="mt-1" /></div>
+            <div>
+              <Label>Телефон</Label>
+              <Input
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="+359 ..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Имейл</Label>
+              <Input
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                type="email"
+                placeholder="info@studio.bg"
+                className="mt-1"
+              />
+            </div>
           </div>
-          <div><Label>Уебсайт</Label><Input placeholder="https://..." className="mt-1" /></div>
+          <div>
+            <Label>Уебсайт</Label>
+            <Input
+              value={website}
+              onChange={e => setWebsite(e.target.value)}
+              placeholder="https://..."
+              className="mt-1"
+            />
+          </div>
           <div>
             <Label className="mb-2 block">Удобства</Label>
             <div className="grid grid-cols-2 gap-3">
@@ -356,7 +462,13 @@ export function StudioModal({
               ].map(a => (
                 <div key={a.key} className="flex items-center justify-between rounded-lg border border-border p-3">
                   <span className="text-sm">{a.label}</span>
-                  <Switch />
+                  <Switch
+                    checked={amenities[a.key as keyof typeof amenities]}
+                    onCheckedChange={(v) => {
+                      const key = a.key as keyof typeof amenities;
+                      setAmenities(prev => ({ ...prev, [key]: v }));
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -364,8 +476,15 @@ export function StudioModal({
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={onClose}>Отказ</Button>
-          <Button onClick={onSave}>Запази</Button>
+          <Button onClick={handleSave} disabled={submitting}>
+            {submitting ? 'Запазване...' : 'Запази'}
+          </Button>
         </DialogFooter>
+        {submitError ? (
+          <div className="px-6 pb-6 text-sm text-destructive">
+            {submitError}
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [activeSection, setActiveSection] = useState<Section>('overview');
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingSchedule, setEditingSchedule] = useState<ScheduleEntry | null>(null);
+  const [studiosRefreshKey, setStudiosRefreshKey] = useState(0);
   const myStudios = mockStudios.filter(s => s.businessId === 'b1');
   const myClasses = mockClasses.filter(c => myStudios.some(s => s.id === c.studioId));
   const myInstructors = mockInstructors.filter(i => myStudios.some(s => s.id === i.studioId));
@@ -34,6 +35,7 @@ const Dashboard = () => {
     const labels = { studio: 'Студиото', instructor: 'Инструкторът', class: 'Класът' };
     toast.success(`${labels[modalType!]} беше запазен успешно!`);
     setModalType(null);
+    setStudiosRefreshKey((k) => k + 1);
   };
 
   const displayName = user?.name || 'Бизнес потребител';
@@ -64,7 +66,7 @@ const Dashboard = () => {
           />
         )}
         {activeSection === 'studios' && (
-          <StudiosSection studios={myStudios} onAdd={() => setModalType('studio')} onEdit={() => setModalType('studio')} />
+          <StudiosSection refreshKey={studiosRefreshKey} onAdd={() => setModalType('studio')} onEdit={() => setModalType('studio')} />
         )}
         {activeSection === 'instructors' && (
           <InstructorsSection instructors={myInstructors} onAdd={() => setModalType('instructor')} onEdit={() => setModalType('instructor')} />

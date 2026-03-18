@@ -1,36 +1,112 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { mockStudios } from '@/data/mock-data';
 import { Edit, MapPin, Plus, Star, Trash2 } from 'lucide-react';
 
+type StudioListItem = {
+  id: string;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+  images: string[];
+  description: string;
+  website?: string;
+  phone: string;
+  email: string;
+  amenities: {
+    parking: boolean;
+    shower: boolean;
+    changingRoom: boolean;
+    equipmentRental: boolean;
+  };
+  rating: number;
+  reviewCount: number;
+  businessId: string;
+};
+
 type StudioProps = {
-  studios: typeof mockStudios;
+  refreshKey: number;
   onAdd: () => void;
   onEdit: () => void;
-}
+};
 
 export function StudiosSection({
-  studios,
+  refreshKey,
   onAdd,
   onEdit,
 }: StudioProps) {
+  const [studios, setStudios] = useState<StudioListItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStudios = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch('/api/studios');
+        if (!res.ok) throw new Error(`Failed to load studios (${res.status})`);
+        const data = await res.json();
+
+        if (!cancelled) setStudios((data?.studios ?? []) as StudioListItem[]);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load studios');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadStudios();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+
+  const studioCountLabel = useMemo(() => {
+    return `${studios.length} студиа`;
+  }, [studios.length]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Моите студиа</h1>
-          <p className="text-muted-foreground text-sm mt-1">{studios.length} студиа</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {loading ? 'Зареждане...' : studioCountLabel}
+          </p>
         </div>
         <Button onClick={onAdd} className="gap-2"><Plus className="h-4 w-4" /> Добави студио</Button>
       </div>
+
+      {error ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
+
+      {loading ? (
+        <div className="text-muted-foreground text-sm">Моля изчакайте…</div>
+      ) : null}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {studios.map((studio) => (
           <div
             key={studio.id}
             className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-md transition-all"
           >
-            <div className="h-32 bg-gradient-to-br from-primary/15 via-secondary/30 to-accent/10 flex items-center justify-center">
-              <span className="text-5xl">🧘</span>
+            <div className="h-32 bg-gradient-to-br from-primary/15 via-secondary/30 to-accent/10 flex items-center justify-center relative">
+              {studio.images?.[0] ? (
+                <img
+                  src={studio.images[0]}
+                  alt={studio.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-5xl">🧘</span>
+              )}
             </div>
             <div className="p-5">
               <div className="flex items-start justify-between gap-3">

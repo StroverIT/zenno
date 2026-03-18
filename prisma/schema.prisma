@@ -24,6 +24,7 @@ model User {
 
   accounts      Account[]
   sessions      Session[]
+  businesses    Business[]
 }
 
 model Account {
@@ -52,4 +53,45 @@ model Session {
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Business {
+  id           String   @id @default(cuid())
+  ownerUserId String   @unique
+  owner        User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  studios Studio[]
+}
+
+model Studio {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  name        String
+  address     String
+  lat         Float?
+  lng         Float?
+  description String
+  website     String?
+  phone       String
+  email       String
+
+  // Supabase Storage public URLs
+  images String[]
+
+  amenitiesParking         Boolean @default(false)
+  amenitiesShower          Boolean @default(false)
+  amenitiesChangingRoom    Boolean @default(false)
+  amenitiesEquipmentRental Boolean @default(false)
+
+  // Placeholder fields for now (computed from reviews later)
+  rating      Float @default(0)
+  reviewCount Int   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
