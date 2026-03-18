@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 
 type StudioModalProps = {
@@ -22,11 +22,16 @@ export function StudioModal({
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
+  const [addressPredictions, setAddressPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
+  const skipNextAddressGeocodeRef = useRef(false);
+  const suppressAutocompleteRef = useRef(false);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey,
+    libraries: ['places'],
   });
 
   const mapCenter = useMemo(() => coords ?? { lat: 42.6977, lng: 23.3219 }, [coords]);
@@ -44,18 +49,29 @@ export function StudioModal({
     if (!open) return;
     // Reset transient errors when reopening.
     setAddressError(null);
+    setAddressDropdownOpen(false);
+    setAddressPredictions([]);
   }, [open]);
 
   useEffect(() => {
+    if (skipNextAddressGeocodeRef.current) {
+      skipNextAddressGeocodeRef.current = false;
+      return;
+    }
+
     if (!address.trim()) {
       setCoords(null);
       setAddressError(null);
+      setAddressPredictions([]);
+      setAddressDropdownOpen(false);
       return;
     }
 
     if (!apiKey) {
       setCoords(null);
       setAddressError('Липсва Google Maps API ключ (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).');
+      setAddressPredictions([]);
+      setAddressDropdownOpen(false);
       return;
     }
 
@@ -63,7 +79,9 @@ export function StudioModal({
       if (!window.google?.maps?.Geocoder) return;
 
       const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address: address.trim() }, (results, status) => {
+      geocoder.geocode(
+        { address: address.trim(), componentRestrictions: { country: 'bg' } },
+        (results, status) => {
         if (status !== 'OK' || !results?.[0]?.geometry?.location) {
           setCoords(null);
           setAddressError('Адресът не е намерен. Опитайте по-точен адрес.');
@@ -73,11 +91,110 @@ export function StudioModal({
         const location = results[0].geometry.location;
         setCoords({ lat: location.lat(), lng: location.lng() });
         setAddressError(null);
-      });
+        },
+      );
     }, 500);
 
     return () => window.clearTimeout(handle);
   }, [address, apiKey]);
+
+  const reverseGeocode = (lat: number, lng: number) => {
+    if (!window.google?.maps?.Geocoder) return;
+
+    skipNextAddressGeocodeRef.current = true; // Avoid immediately geocoding `address` again from our reverse result.
+    suppressAutocompleteRef.current = true; // We don't want dropdown to pop up after pin.
+    const geocoder = new window.google.maps.Geocoder();
+
+    const hasSpecificType = (types?: string[]) => {
+      if (!types?.length) return false;
+      return types.some(t =>
+        [
+          'street_address',
+          'route',
+          'premise',
+          'subpremise',
+          'street_number',
+          'point_of_interest',
+          'establishment',
+          'postal_code',
+          'neighborhood',
+          'locality',
+          'administrative_area_level_2',
+        ].includes(t),
+      );
+    };
+
+    const pickBest = (results: google.maps.GeocoderResult[]) => {
+      // Prefer street/premise-level responses; fall back to first.
+      return (
+        results.find(r => hasSpecificType(r.types)) ??
+        results.find(r => hasSpecificType(r.types?.slice?.(0, 10))) ??
+        results[0]
+      );
+    };
+
+    const run = (opts: google.maps.GeocoderRequest) => {
+      geocoder.geocode(opts, (results, status) => {
+        if (status !== 'OK' || !results?.length) return;
+
+        const best = pickBest(results);
+        const bestTypes = best?.types ?? [];
+        const isOnlyCountryLevel =
+          bestTypes.length === 1 && bestTypes[0] === 'country' || (!hasSpecificType(bestTypes) && bestTypes.includes('country'));
+
+        if (opts.componentRestrictions?.country === 'bg' && isOnlyCountryLevel) {
+          // Sometimes bg-restricted reverse geocoding yields only the country.
+          // Retry without restriction for more specific results.
+          run({ location: { lat, lng } });
+          return;
+        }
+
+        setAddress(best?.formatted_address ?? address);
+        setAddressError(null);
+        setAddressDropdownOpen(false);
+        setAddressPredictions([]);
+      });
+    };
+
+    run({ location: { lat, lng }, componentRestrictions: { country: 'bg' } });
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    if (!address.trim()) return;
+    if (!isLoaded) return;
+    if (!apiKey) return;
+    if (!window.google?.maps?.places?.AutocompleteService) return;
+
+    if (suppressAutocompleteRef.current) {
+      suppressAutocompleteRef.current = false;
+      setAddressDropdownOpen(false);
+      setAddressPredictions([]);
+      return;
+    }
+
+    const handle = window.setTimeout(() => {
+      const service = new window.google.maps.places.AutocompleteService();
+      service.getPlacePredictions(
+        {
+          input: address.trim(),
+          types: ['geocode', 'establishment'],
+          componentRestrictions: { country: 'bg' },
+        },
+        (predictions, status) => {
+          if (status !== window.google.maps.places.PlacesServiceStatus.OK || !predictions?.length) {
+            setAddressPredictions([]);
+            setAddressDropdownOpen(false);
+            return;
+          }
+          setAddressPredictions(predictions);
+          setAddressDropdownOpen(true);
+        },
+      );
+    }, 250);
+
+    return () => window.clearTimeout(handle);
+  }, [address, apiKey, isLoaded, open]);
 
   useEffect(() => {
     return () => {
@@ -97,12 +214,55 @@ export function StudioModal({
           <div className="space-y-2">
             <div>
               <Label>Адрес</Label>
-              <Input
-                value={address}
-                onChange={e => setAddress(e.target.value)}
-                placeholder="ул. Витоша 45, София"
-                className="mt-1"
-              />
+              <div className="relative mt-1">
+                <Input
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  onFocus={() => {
+                    if (addressPredictions.length) setAddressDropdownOpen(true);
+                  }}
+                  onBlur={() => {
+                    // Let option clicks register before closing.
+                    window.setTimeout(() => setAddressDropdownOpen(false), 150);
+                  }}
+                  placeholder="ул. Витоша 45, София"
+                />
+
+                {addressDropdownOpen && addressPredictions.length ? (
+                  <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-border bg-background shadow-lg">
+                    <ul className="max-h-64 overflow-auto py-1">
+                      {addressPredictions.slice(0, 8).map((p) => (
+                        <li key={p.place_id}>
+                          <button
+                            type="button"
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-muted/60"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              suppressAutocompleteRef.current = true;
+                              skipNextAddressGeocodeRef.current = true;
+                              setAddress(p.description);
+                              setAddressDropdownOpen(false);
+                              setAddressPredictions([]);
+
+                              if (!window.google?.maps?.Geocoder) return;
+                              const geocoder = new window.google.maps.Geocoder();
+                              geocoder.geocode({ placeId: p.place_id }, (results, status) => {
+                                if (status !== 'OK' || !results?.[0]?.geometry?.location) return;
+                                const location = results[0].geometry.location;
+                                setCoords({ lat: location.lat(), lng: location.lng() });
+                                setAddressError(null);
+                              });
+                            }}
+                          >
+                            <div className="font-medium">{p.structured_formatting.main_text}</div>
+                            <div className="text-xs text-muted-foreground">{p.structured_formatting.secondary_text}</div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
             </div>
 
             <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
@@ -118,13 +278,36 @@ export function StudioModal({
                     mapContainerStyle={{ width: '100%', height: '100%' }}
                     center={mapCenter}
                     zoom={coords ? 16 : 12}
+                    onClick={(e) => {
+                      const lat = e.latLng?.lat();
+                      const lng = e.latLng?.lng();
+                      if (lat == null || lng == null) return;
+                      const next = { lat, lng };
+                      setCoords(next);
+                      setAddressError(null);
+                      reverseGeocode(lat, lng);
+                    }}
                     options={{
                       mapTypeControl: false,
                       streetViewControl: false,
                       fullscreenControl: false,
                     }}
                   >
-                    {coords ? <MarkerF position={coords} /> : null}
+                    {coords ? (
+                      <MarkerF
+                        position={coords}
+                        draggable
+                        onDragEnd={(e) => {
+                          const lat = e.latLng?.lat();
+                          const lng = e.latLng?.lng();
+                          if (lat == null || lng == null) return;
+                          const next = { lat, lng };
+                          setCoords(next);
+                          setAddressError(null);
+                          reverseGeocode(lat, lng);
+                        }}
+                      />
+                    ) : null}
                   </GoogleMap>
                 </div>
               )}
