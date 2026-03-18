@@ -3,15 +3,17 @@ import { Separator } from '@/components/ui/separator';
 import { mockStudios } from '@/data/mock-data';
 import { Edit, MapPin, Plus, Star, Trash2 } from 'lucide-react';
 
+type StudioProps = {
+  studios: typeof mockStudios;
+  onAdd: () => void;
+  onEdit: () => void;
+}
+
 export function StudiosSection({
   studios,
   onAdd,
   onEdit,
-}: {
-  studios: typeof mockStudios;
-  onAdd: () => void;
-  onEdit: () => void;
-}) {
+}: StudioProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
