@@ -69,7 +69,7 @@ const Auth = () => {
         <div className="text-center mb-8">
           <div className="overflow-hidden mb-4">
             <div
-              className="flex w-[200%] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              className="flex w-[200%] transition-transform duration-700 ease-auth-tab"
               style={{ transform: modeOffset }}
             >
               <div className="w-1/2 flex justify-center">
@@ -89,7 +89,7 @@ const Auth = () => {
 
           <div className="overflow-hidden">
             <div
-              className="flex w-[200%] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              className="flex w-[200%] transition-transform duration-700 ease-auth-tab"
               style={{ transform: modeOffset }}
             >
               <h1 className="w-1/2 font-display text-4xl font-bold text-foreground">Вход в Zenno</h1>
@@ -99,7 +99,7 @@ const Auth = () => {
 
           <div className="overflow-hidden mt-2">
             <div
-              className="flex w-[200%] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              className="flex w-[200%] transition-transform duration-700 ease-auth-tab"
               style={{ transform: modeOffset }}
             >
               <p className="w-1/2 text-muted-foreground">Влезте, за да продължите към вашата практика</p>
@@ -110,7 +110,7 @@ const Auth = () => {
 
         <div className="relative flex rounded-xl bg-muted p-1 mb-6">
           <div
-            className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-background shadow-sm transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-background shadow-sm transition-transform duration-700 ease-auth-tab"
             style={{ transform: mode === 'login' ? 'translateX(0%)' : 'translateX(100%)' }}
           />
           {(['login', 'register'] as const).map(tab => (
@@ -127,7 +127,7 @@ const Auth = () => {
 
         <div className="rounded-2xl border border-border bg-card overflow-hidden relative">
           <div
-            className="flex w-[200%] items-start transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            className="flex w-[200%] items-start transition-transform duration-700 ease-auth-tab"
             style={{ transform: modeOffset }}
           >
             <div className="w-1/2 shrink-0 p-8">

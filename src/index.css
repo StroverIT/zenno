@@ -115,6 +115,11 @@
   }
 }
 
+/* Auth tab transition easing (avoids ambiguous Tailwind arbitrary class) */
+.ease-auth-tab {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* Swiper custom theme */
 .studios-swiper .swiper-button-next,
 .studios-swiper .swiper-button-prev {
