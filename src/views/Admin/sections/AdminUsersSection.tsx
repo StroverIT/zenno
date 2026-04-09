@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -10,13 +11,30 @@ const mockUsers = [
 ];
 
 export function AdminUsersSection() {
+  const [search, setSearch] = useState('');
+
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return mockUsers;
+    return mockUsers.filter(
+      u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    );
+  }, [search]);
+
   return (
     <div>
       <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-md">
         <div className="p-4 border-b border-border">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Търси потребител..." className="pl-10 rounded-xl bg-white" />
+            <Input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Търси по име или имейл..."
+              className="pl-10 rounded-xl bg-white"
+              type="search"
+              autoComplete="off"
+            />
           </div>
         </div>
         <table className="w-full text-sm">
@@ -29,8 +47,15 @@ export function AdminUsersSection() {
             </tr>
           </thead>
           <tbody>
-            {mockUsers.map((u, i) => (
-              <tr key={i} className="border-t border-border hover:bg-muted/30 transition-colors">
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-sm text-muted-foreground">
+                  Няма потребители за това търсене.
+                </td>
+              </tr>
+            ) : (
+              filteredUsers.map(u => (
+              <tr key={u.email} className="border-t border-border hover:bg-muted/30 transition-colors">
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
@@ -59,7 +84,8 @@ export function AdminUsersSection() {
                   </Button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>

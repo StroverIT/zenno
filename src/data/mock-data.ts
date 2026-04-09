@@ -54,6 +54,7 @@ export interface Review {
   id: string;
   userId: string;
   userName: string;
+  userEmail?: string;
   targetId: string;
   targetType: 'studio' | 'instructor' | 'class';
   rating: number;
@@ -222,11 +223,11 @@ export const mockClasses: YogaClass[] = [
 ];
 
 export const mockReviews: Review[] = [
-  { id: 'r1', userId: 'u1', userName: 'Анна К.', targetId: 's1', targetType: 'studio', rating: 5, text: 'Прекрасно студио с невероятна атмосфера!', date: '2026-02-10' },
-  { id: 'r2', userId: 'u2', userName: 'Петър Д.', targetId: 's1', targetType: 'studio', rating: 4, text: 'Много добри инструктори, удобна локация.', date: '2026-02-08' },
-  { id: 'r3', userId: 'u3', userName: 'Ива М.', targetId: 'i1', targetType: 'instructor', rating: 5, text: 'Мария е невероятен учител! Препоръчвам горещо.', date: '2026-02-05' },
-  { id: 'r4', userId: 'u4', userName: 'Даниел С.', targetId: 's2', targetType: 'studio', rating: 5, text: 'Отлични занятия по Аштанга, чисти съблекални.', date: '2026-02-12' },
-  { id: 'r5', userId: 'u5', userName: 'Елена В.', targetId: 's4', targetType: 'studio', rating: 4, text: 'Динамични класове, понякога е претъпкано.', date: '2026-02-11' },
+  { id: 'r1', userId: 'u1', userName: 'Анна К.', userEmail: 'anna@mail.bg', targetId: 's1', targetType: 'studio', rating: 5, text: 'Прекрасно студио с невероятна атмосфера!', date: '2026-02-10' },
+  { id: 'r2', userId: 'u2', userName: 'Петър Д.', userEmail: 'petar@mail.bg', targetId: 's1', targetType: 'studio', rating: 4, text: 'Много добри инструктори, удобна локация.', date: '2026-02-08' },
+  { id: 'r3', userId: 'u3', userName: 'Ива М.', userEmail: 'iva@mail.bg', targetId: 'i1', targetType: 'instructor', rating: 5, text: 'Мария е невероятен учител! Препоръчвам горещо.', date: '2026-02-05' },
+  { id: 'r4', userId: 'u4', userName: 'Даниел С.', userEmail: 'daniel@mail.bg', targetId: 's2', targetType: 'studio', rating: 5, text: 'Отлични занятия по Аштанга, чисти съблекални.', date: '2026-02-12' },
+  { id: 'r5', userId: 'u5', userName: 'Елена В.', userEmail: 'elena@mail.bg', targetId: 's4', targetType: 'studio', rating: 4, text: 'Динамични класове, понякога е претъпкано.', date: '2026-02-11' },
 ];
 
 export const mockRecentEnrollments: RecentEnrollment[] = [
