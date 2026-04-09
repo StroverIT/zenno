@@ -32,14 +32,14 @@ export function AdminReviewsSection() {
             />
           </div>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="divide-y divide-border">
           {filteredReviews.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">Няма ревюта за това търсене.</p>
+            <p className="text-sm text-muted-foreground px-5 py-8 text-center">Няма ревюта за това търсене.</p>
           ) : (
             filteredReviews.map(review => (
               <div
                 key={review.id}
-                className="rounded-xl border border-border bg-white p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow shadow-md"
+                className="flex items-start justify-between gap-4 px-5 py-5"
               >
                 <div className="flex gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
