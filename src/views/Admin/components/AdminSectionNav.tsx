@@ -22,9 +22,8 @@ export function AdminSectionNav({ activeSection, onSectionChange }: AdminSection
           key={s.key}
           type="button"
           onClick={() => onSectionChange(s.key)}
-          className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-            activeSection === s.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
-          }`}
+          className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeSection === s.key ? 'text-foreground bg-white' : 'text-muted-foreground hover:text-foreground/70'
+            }`}
         >
           <span className="relative z-10 flex items-center gap-2">
             {s.icon}

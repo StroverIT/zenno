@@ -12,11 +12,11 @@ const mockUsers = [
 export function AdminUsersSection() {
   return (
     <div>
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-md">
         <div className="p-4 border-b border-border">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Търси потребител..." className="pl-10 rounded-xl" />
+            <Input placeholder="Търси потребител..." className="pl-10 rounded-xl bg-white" />
           </div>
         </div>
         <table className="w-full text-sm">

@@ -9,7 +9,7 @@ export function AdminReviewsSection() {
         {mockReviews.map(review => (
           <div
             key={review.id}
-            className="rounded-xl border border-border bg-card p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow"
+            className="rounded-xl border border-border bg-white p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow shadow-md"
           >
             <div className="flex gap-4">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">

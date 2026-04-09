@@ -12,14 +12,14 @@ export function AdminStudiosSection() {
       <div className="flex items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Търси студио..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 rounded-xl" />
+          <Input placeholder="Търси студио..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 rounded-xl bg-white" />
         </div>
       </div>
       <div className="space-y-3">
         {mockStudios.filter(s => !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase())).map(studio => (
           <div
             key={studio.id}
-            className="rounded-xl border border-border bg-card p-5 flex items-center justify-between hover:shadow-md transition-shadow"
+            className="rounded-xl border border-border bg-white p-5 flex items-center justify-between hover:shadow-md transition-shadow shadow-md"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-sage/30 flex items-center justify-center text-xl">🧘</div>
