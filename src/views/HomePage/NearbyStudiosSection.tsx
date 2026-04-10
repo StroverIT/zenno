@@ -96,7 +96,7 @@ export default function NearbyStudiosSection({ studios, isFavorite, onFavorite }
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex items-end justify-between mb-6 gap-4">
-          <div className="flex">
+          <div className="flex items-center gap-2">
             <div className="p-2 bg-yoga-secondary/20 rounded-full">
               <MapPin className="w-6 h-6 text-yoga-secondary" />
             </div>

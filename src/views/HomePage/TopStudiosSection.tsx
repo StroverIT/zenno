@@ -26,14 +26,16 @@ export default function TopStudiosSection({ studios, isFavorite, onFavorite }: T
     <section className="py-20 bg-card">
       <div className="container mx-auto px-4">
         <div className="flex items-end justify-between mb-6 gap-4">
-          <div>
-            <Badge variant="secondary" className="rounded-full mb-3">
-              Препоръчани
-            </Badge>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Студиа, които ще обикнеш
-            </h2>
-            <p className="text-muted-foreground">Избрани от общността с най-много положителни отзиви</p>
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-yoga-secondary/20 rounded-full">
+              <Star className="w-6 h-6 text-yoga-secondary fill-yoga-secondary" />
+            </div>
+            <div>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Най-добре оценени
+              </h2>
+              <p className="text-muted-foreground">Студиа с най-висок рейтинг от нашата общност</p>
+            </div>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
