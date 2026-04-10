@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart, User, LogOut } from "lucide-react";
 import Hamburger from "hamburger-react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import AuthModal from "@/components/AuthModal";
 
@@ -19,7 +19,11 @@ const Navigation: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  /** Keeps the panel mounted until the GSAP close timeline finishes. */
+  const [mobileMenuMounted, setMobileMenuMounted] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
+  const mobileMenuTlRef = useRef<gsap.core.Timeline | null>(null);
   const logoWrapRef = useRef<HTMLDivElement>(null);
   const sloganWrapRef = useRef<HTMLDivElement>(null);
   const sloganInnerRef = useRef<HTMLSpanElement>(null);
@@ -111,6 +115,85 @@ const Navigation: React.FC = () => {
       gsap.killTweensOf([el, sloganWrap].filter(Boolean));
     };
   }, []);
+
+  const setMobileMenuOpen = useCallback((next: boolean) => {
+    if (next) setMobileMenuMounted(true);
+    setMobileOpen(next);
+  }, []);
+
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), [setMobileMenuOpen]);
+
+  useLayoutEffect(() => {
+    if (!mobileMenuMounted) return;
+    const el = mobilePanelRef.current;
+    if (!el) return;
+
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const items = el.querySelectorAll<HTMLElement>("[data-mobile-nav-item]");
+
+    mobileMenuTlRef.current?.kill();
+
+    if (mobileOpen) {
+      if (reduced) {
+        gsap.set(el, { clearProps: "clipPath" });
+        gsap.set(items, { clearProps: "opacity,transform" });
+        return;
+      }
+      gsap.set(el, { clipPath: "inset(0 0 100% 0)" });
+      gsap.set(items, { opacity: 0, y: 14 });
+      const tl = gsap.timeline();
+      tl.to(el, {
+        clipPath: "inset(0 0 0% 0)",
+        duration: 0.5,
+        ease: "power4.out",
+      }).to(
+        items,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          stagger: 0.065,
+          ease: "power2.out",
+        },
+        "-=0.32"
+      );
+      mobileMenuTlRef.current = tl;
+      return () => {
+        mobileMenuTlRef.current?.kill();
+      };
+    }
+
+    if (reduced) {
+      setMobileMenuMounted(false);
+      return;
+    }
+
+    const tl = gsap.timeline({
+      onComplete: () => setMobileMenuMounted(false),
+    });
+    tl.to(items, {
+      opacity: 0,
+      y: -10,
+      duration: 0.22,
+      stagger: { each: 0.038, from: "end" },
+      ease: "power2.in",
+    }).to(
+      el,
+      {
+        clipPath: "inset(0 0 100% 0)",
+        duration: 0.38,
+        ease: "power3.in",
+      },
+      "-=0.08"
+    );
+    mobileMenuTlRef.current = tl;
+
+    return () => {
+      mobileMenuTlRef.current?.kill();
+    };
+  }, [mobileOpen, mobileMenuMounted]);
 
   const handleFavoritesClick = (e: React.MouseEvent) => {
     if (!isAuthenticated) {
@@ -211,7 +294,7 @@ const Navigation: React.FC = () => {
           <div className="md:hidden text-foreground [&_.hamburger-react]:rounded-md [&_.hamburger-react]:hover:bg-accent [&_.hamburger-react]:hover:text-accent-foreground">
             <Hamburger
               toggled={mobileOpen}
-              toggle={setMobileOpen}
+              toggle={setMobileMenuOpen}
               size={22}
               label={mobileOpen ? "Затвори менюто" : "Отвори менюто"}
               color="currentColor"
@@ -219,31 +302,101 @@ const Navigation: React.FC = () => {
           </div>
         </div>
 
-        {mobileOpen && (
-          <div className="md:hidden border-t border-border bg-background px-4 py-4 space-y-3 font-body">
-            <Link href="/discover" className="block py-2" onClick={() => setMobileOpen(false)}>Открий студио</Link>
-            <button
-              className="block py-2 w-full text-left"
-              onClick={() => {
-                setMobileOpen(false);
-                if (!isAuthenticated) { setAuthModalOpen(true); } else { router.push("/favorites"); }
-              }}
-            >
-              Любими
-            </button>
-            {isAuthenticated ? (
-              <>
-                <Link href="/profile" className="block py-2" onClick={() => setMobileOpen(false)}>Профил</Link>
-                {user?.role === 'business' && <Link href="/dashboard" className="block py-2" onClick={() => setMobileOpen(false)}>Табло</Link>}
-                {user?.role === 'admin' && <Link href="/admin" className="block py-2" onClick={() => setMobileOpen(false)}>Админ панел</Link>}
-                <button className="block py-2 text-destructive" onClick={() => { logout(); router.push("/"); setMobileOpen(false); }}>Изход</button>
-              </>
-            ) : (
-              <>
-                <Link href="/auth" className="block py-2" onClick={() => setMobileOpen(false)}>Вход</Link>
-                <Link href="/auth" className="block py-2 font-semibold text-primary" onClick={() => setMobileOpen(false)}>Регистрация</Link>
-              </>
-            )}
+        {mobileMenuMounted && (
+          <div
+            ref={mobilePanelRef}
+            className="md:hidden overflow-hidden border-t border-border bg-background font-body will-change-[clip-path]"
+            aria-hidden={!mobileOpen}
+            inert={!mobileOpen}
+          >
+            <div className="px-4 py-4 space-y-3">
+              <Link
+                href="/discover"
+                className="block py-2"
+                data-mobile-nav-item
+                onClick={closeMobileMenu}
+              >
+                Открий студио
+              </Link>
+              <button
+                type="button"
+                className="block py-2 w-full text-left"
+                data-mobile-nav-item
+                onClick={() => {
+                  closeMobileMenu();
+                  if (!isAuthenticated) {
+                    setAuthModalOpen(true);
+                  } else {
+                    router.push("/favorites");
+                  }
+                }}
+              >
+                Любими
+              </button>
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="block py-2"
+                    data-mobile-nav-item
+                    onClick={closeMobileMenu}
+                  >
+                    Профил
+                  </Link>
+                  {user?.role === "business" && (
+                    <Link
+                      href="/dashboard"
+                      className="block py-2"
+                      data-mobile-nav-item
+                      onClick={closeMobileMenu}
+                    >
+                      Табло
+                    </Link>
+                  )}
+                  {user?.role === "admin" && (
+                    <Link
+                      href="/admin"
+                      className="block py-2"
+                      data-mobile-nav-item
+                      onClick={closeMobileMenu}
+                    >
+                      Админ панел
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    className="block py-2 text-destructive"
+                    data-mobile-nav-item
+                    onClick={() => {
+                      logout();
+                      router.push("/");
+                      closeMobileMenu();
+                    }}
+                  >
+                    Изход
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth"
+                    className="block py-2"
+                    data-mobile-nav-item
+                    onClick={closeMobileMenu}
+                  >
+                    Вход
+                  </Link>
+                  <Link
+                    href="/auth"
+                    className="block py-2 font-semibold text-primary"
+                    data-mobile-nav-item
+                    onClick={closeMobileMenu}
+                  >
+                    Регистрация
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         )}
       </header>
