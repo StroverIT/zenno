@@ -105,3 +105,89 @@
   border-radius: 9999px;
   box-shadow: 0 12px 24px rgba(101, 99, 165, 0.35);
 }
+
+.button-hover-surface {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.button-hover-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.button-hover-surface::before,
+.button-hover-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.button-hover-wave::before {
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 18%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.14) 72%,
+    transparent 100%
+  );
+  opacity: var(--button-wave-opacity, 0);
+  transform: scaleX(var(--button-wave-scale, 0));
+  transform-origin: left center;
+}
+
+.button-hover-ripple::after {
+  left: calc(var(--button-ripple-x, 50) * 1%);
+  top: calc(var(--button-ripple-y, 50) * 1%);
+  width: 140px;
+  height: 140px;
+  inset: auto;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.16) 46%,
+    transparent 74%
+  );
+  opacity: var(--button-ripple-opacity, 0);
+  transform: translate(-50%, -50%) scale(var(--button-ripple-scale, 0));
+}
+
+.button-hover-sweep::after {
+  top: 50%;
+  inset-inline: auto;
+  width: 42%;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  opacity: var(--button-sweep-opacity, 0);
+  transform: translate3d(var(--button-sweep-x, -140%), -50%, 0);
+}
+
+.button-hover-gradient::before {
+  inset: -1px;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(244, 204, 193, 0.2) 30%,
+    rgba(189, 181, 218, 0.28) 55%,
+    rgba(125, 165, 188, 0.22) 100%
+  );
+  background-size: 200% 200%;
+  background-position: var(--button-gradient-x, 0%) 50%;
+  opacity: var(--button-gradient-opacity, 0);
+}
+
+.button-hover-border::before {
+  background:
+    linear-gradient(currentColor 0 0) left top / var(--button-border-top, 0%) 1px no-repeat,
+    linear-gradient(currentColor 0 0) right top / 1px var(--button-border-right, 0%) no-repeat,
+    linear-gradient(currentColor 0 0) right bottom / var(--button-border-bottom, 0%) 1px no-repeat,
+    linear-gradient(currentColor 0 0) left bottom / 1px var(--button-border-left, 0%) no-repeat;
+  opacity: var(--button-border-opacity, 0.2);
+}

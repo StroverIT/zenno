@@ -45,7 +45,7 @@ export default function HeroSection() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="text-base px-8 py-6 rounded-xl border-2 border-yoga-accent bg-background/90 text-yoga-accent hover:bg-yoga-accent/10 hover:text-yoga-accent focus-visible:ring-yoga-accent no-underline hover:no-underline"
+                className="text-base px-8 py-6 rounded-xl border-2 border-yoga-accent bg-background/90 focus-visible:ring-yoga-accent"
               >
                 <Link href="/auth">
                   Добави своето студио <ArrowRight className="ml-1 h-4 w-4" />
