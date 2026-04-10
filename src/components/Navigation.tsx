@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Heart, User, LogOut, Menu, X } from "lucide-react";
+import { Heart, User, LogOut } from "lucide-react";
+import Hamburger from "hamburger-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import AuthModal from "@/components/AuthModal";
@@ -207,9 +208,15 @@ const Navigation: React.FC = () => {
             )}
           </div>
 
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X /> : <Menu />}
-          </Button>
+          <div className="md:hidden text-foreground [&_.hamburger-react]:rounded-md [&_.hamburger-react]:hover:bg-accent [&_.hamburger-react]:hover:text-accent-foreground">
+            <Hamburger
+              toggled={mobileOpen}
+              toggle={setMobileOpen}
+              size={22}
+              label={mobileOpen ? "Затвори менюто" : "Отвори менюто"}
+              color="currentColor"
+            />
+          </div>
         </div>
 
         {mobileOpen && (
