@@ -43,13 +43,6 @@ export function DiscoverStudioCard({ studio }: DiscoverStudioCardProps) {
             )}
           </div>
 
-          {studio.nextClass && (
-            <div className="mt-2 flex items-center gap-1 text-yoga-text-soft text-sm">
-              <Clock className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">Следващ час: {studio.nextClass}</span>
-            </div>
-          )}
-
           <div className="mt-3 flex flex-wrap gap-1.5">
             {studio.styles.slice(0, 3).map((style) => (
               <Badge
