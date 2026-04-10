@@ -1,15 +1,16 @@
 @import "../index.css";
 
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Playfair+Display:wght@500;600;700&display=swap&subset=latin,cyrillic");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-body: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
+  --font-sans:
+    var(--font-nunito), "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
-  --font-heading: "Playfair Display", "Times New Roman", serif;
+  --font-serif:
+    var(--font-playfair), "Playfair Display", "Times New Roman", serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
   --yoga-bg: #fff6ea;
   --yoga-surface: #ffffff;
   --yoga-accent: #6563a5;
@@ -22,11 +23,65 @@
   --yoga-text-soft: #678b9f;
 }
 
+@theme inline {
+  --font-sans:
+    var(--font-nunito), "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-serif:
+    var(--font-playfair), "Playfair Display", "Times New Roman", serif;
+  --font-mono: "Geist Mono", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Zenno custom colors for Tailwind */
+  --color-yoga-bg: #fff6ea;
+  --color-yoga-surface: #ffffff;
+  --color-yoga-accent: #6563a5;
+  --color-yoga-accent-soft: rgba(101, 99, 165, 0.2);
+  --color-yoga-secondary: #7da5bc;
+  --color-yoga-secondary-deep: #678b9f;
+  --color-yoga-tertiary: #bdb5da;
+  --color-yoga-warm: #f4ccc1;
+  --color-yoga-text: #2d2a4f;
+  --color-yoga-text-soft: #678b9f;
+}
+
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   background:
-    radial-gradient(circle at top left, rgba(101, 99, 165, 0.18), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(125, 165, 188, 0.16), transparent 55%),
+    radial-gradient(
+      circle at top left,
+      rgba(101, 99, 165, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(125, 165, 188, 0.16),
+      transparent 55%
+    ),
     var(--yoga-bg);
   color: var(--yoga-text);
 }
@@ -35,7 +90,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-heading);
+  font-family: var(--font-serif);
   letter-spacing: 0.03em;
 }
 

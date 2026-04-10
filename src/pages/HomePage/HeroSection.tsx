@@ -25,7 +25,7 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="hero-content gsap-reveal-block">
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] mb-6">
+            <h1 className=" text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] mb-6 font-serif">
               Йога, която пасва на ритъма ти
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mb-8 leading-relaxed">

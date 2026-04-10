@@ -96,19 +96,22 @@ export default function NearbyStudiosSection({ studios, isFavorite, onFavorite }
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex items-end justify-between mb-6 gap-4">
-          <div>
-            <Badge variant="secondary" className="rounded-full mb-3 inline-flex items-center gap-1">
-              <LocateFixed className="h-3 w-3" />
-              Близо до теб
-            </Badge>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Намери студио на няколко крачки
-            </h2>
-            <p className="text-muted-foreground">
-              {hasRealLocation
-                ? "Използваме текущата ти локация, за да ти покажем най-близките йога студиа."
-                : "Показваме примерни популярни студиа. Разреши достъп до локацията си за по-точни резултати."}
-            </p>
+          <div className="flex">
+            <div className="p-2 bg-yoga-secondary/20 rounded-full">
+              <MapPin className="w-6 h-6 text-yoga-secondary" />
+            </div>
+            <div>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Близо до теб
+              </h2>
+
+              <p className="text-muted-foreground">
+                {hasRealLocation
+                  ? "Открий йога студиа в твоя район."
+                  : "Показваме примерни популярни студиа. Разреши достъп до локацията си за по-точни резултати."}
+              </p>
+            </div>
+
           </div>
 
           <div className="hidden md:flex items-center gap-3">
