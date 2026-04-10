@@ -14,6 +14,16 @@ import AuthModal from "@/components/AuthModal";
 const LOGO_SCROLL_THRESHOLD_PX = 8;
 const LOGO_LARGE = { width: "7rem", height: "7rem" }; // h-28 w-28
 const LOGO_COMPACT = { width: "7rem", height: "6rem" }; // w-28 h-24
+const DESKTOP_NAV_LINK_CLASS =
+  "relative text-foreground/70 transition-all duration-300 ease-out hover:text-primary hover:-translate-y-0.5 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-primary after:transition-transform after:duration-300 after:ease-out hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+const ICON_BUTTON_CLASS =
+  "transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/10 hover:text-primary hover:shadow-sm active:translate-y-0";
+const AUTH_GHOST_BUTTON_CLASS =
+  "transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/10 hover:text-primary active:translate-y-0";
+const AUTH_PRIMARY_BUTTON_CLASS =
+  "transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/25 active:translate-y-0";
+const MOBILE_ITEM_CLASS =
+  "block w-full rounded-md px-3 py-2 text-left transition-all duration-300 ease-out hover:bg-primary/10 hover:text-primary hover:translate-x-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
 const Navigation: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -241,14 +251,14 @@ const Navigation: React.FC = () => {
           <nav className="hidden md:flex items-center gap-6 font-body text-sm font-medium">
             <Link
               href="/discover"
-              className="text-foreground/70 hover:text-primary transition-colors"
+              className={DESKTOP_NAV_LINK_CLASS}
             >
               Открий студио
             </Link>
             {isAuthenticated && user?.role === 'business' && (
               <Link
                 href="/dashboard"
-                className="text-foreground/70 hover:text-primary transition-colors"
+                className={DESKTOP_NAV_LINK_CLASS}
               >
                 Табло
               </Link>
@@ -256,7 +266,7 @@ const Navigation: React.FC = () => {
             {isAuthenticated && user?.role === 'admin' && (
               <Link
                 href="/admin"
-                className="text-foreground/70 hover:text-primary transition-colors"
+                className={DESKTOP_NAV_LINK_CLASS}
               >
                 Админ панел
               </Link>
@@ -265,16 +275,17 @@ const Navigation: React.FC = () => {
 
           <div className="hidden md:flex items-center gap-3">
             <Link href="/favorites" onClick={handleFavoritesClick}>
-              <Button variant="ghost" size="icon"><Heart className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className={ICON_BUTTON_CLASS}><Heart className="h-5 w-5" /></Button>
             </Link>
             {isAuthenticated ? (
               <>
                 <Link href="/profile">
-                  <Button variant="ghost" size="icon"><User className="h-5 w-5" /></Button>
+                  <Button variant="ghost" size="icon" className={ICON_BUTTON_CLASS}><User className="h-5 w-5" /></Button>
                 </Link>
                 <Button
                   variant="ghost"
                   size="icon"
+                  className={ICON_BUTTON_CLASS}
                   onClick={() => {
                     logout();
                     router.push("/");
@@ -285,8 +296,16 @@ const Navigation: React.FC = () => {
               </>
             ) : (
               <>
-                <Button variant="ghost" onClick={() => router.push("/auth")}>Вход</Button>
-                <Button onClick={() => router.push("/auth")}>Регистрация</Button>
+                <Button
+                  variant="ghost"
+                  className={AUTH_GHOST_BUTTON_CLASS}
+                  onClick={() => router.push("/auth")}
+                >
+                  Вход
+                </Button>
+                <Button className={AUTH_PRIMARY_BUTTON_CLASS} onClick={() => router.push("/auth")}>
+                  Регистрация
+                </Button>
               </>
             )}
           </div>
@@ -312,7 +331,7 @@ const Navigation: React.FC = () => {
             <div className="px-4 py-4 space-y-3">
               <Link
                 href="/discover"
-                className="block py-2"
+                className={MOBILE_ITEM_CLASS}
                 data-mobile-nav-item
                 onClick={closeMobileMenu}
               >
@@ -320,7 +339,7 @@ const Navigation: React.FC = () => {
               </Link>
               <button
                 type="button"
-                className="block py-2 w-full text-left"
+                className={MOBILE_ITEM_CLASS}
                 data-mobile-nav-item
                 onClick={() => {
                   closeMobileMenu();
@@ -337,7 +356,7 @@ const Navigation: React.FC = () => {
                 <>
                   <Link
                     href="/profile"
-                    className="block py-2"
+                    className={MOBILE_ITEM_CLASS}
                     data-mobile-nav-item
                     onClick={closeMobileMenu}
                   >
@@ -346,7 +365,7 @@ const Navigation: React.FC = () => {
                   {user?.role === "business" && (
                     <Link
                       href="/dashboard"
-                      className="block py-2"
+                      className={MOBILE_ITEM_CLASS}
                       data-mobile-nav-item
                       onClick={closeMobileMenu}
                     >
@@ -356,7 +375,7 @@ const Navigation: React.FC = () => {
                   {user?.role === "admin" && (
                     <Link
                       href="/admin"
-                      className="block py-2"
+                      className={MOBILE_ITEM_CLASS}
                       data-mobile-nav-item
                       onClick={closeMobileMenu}
                     >
@@ -365,7 +384,7 @@ const Navigation: React.FC = () => {
                   )}
                   <button
                     type="button"
-                    className="block py-2 text-destructive"
+                    className={`${MOBILE_ITEM_CLASS} text-destructive hover:bg-destructive/10 hover:text-destructive`}
                     data-mobile-nav-item
                     onClick={() => {
                       logout();
@@ -380,7 +399,7 @@ const Navigation: React.FC = () => {
                 <>
                   <Link
                     href="/auth"
-                    className="block py-2"
+                    className={MOBILE_ITEM_CLASS}
                     data-mobile-nav-item
                     onClick={closeMobileMenu}
                   >
@@ -388,7 +407,7 @@ const Navigation: React.FC = () => {
                   </Link>
                   <Link
                     href="/auth"
-                    className="block py-2 font-semibold text-primary"
+                    className={`${MOBILE_ITEM_CLASS} font-semibold text-primary`}
                     data-mobile-nav-item
                     onClick={closeMobileMenu}
                   >
