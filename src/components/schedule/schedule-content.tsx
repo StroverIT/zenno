@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-type AdminProps = {
+export type AdminProps = {
   variant: 'admin';
   studios: Studio[];
   schedule: ScheduleEntry[];
@@ -30,6 +30,7 @@ type AdminProps = {
   instructors: Instructor[];
   onAdd: () => void;
   onEdit: (entry: ScheduleEntry) => void;
+  onDelete: (entry: ScheduleEntry) => void;
 };
 
 type UserProps = {
@@ -52,6 +53,7 @@ export function ScheduleContent(props: ScheduleContentProps) {
         instructors={props.instructors}
         onAdd={props.onAdd}
         onEdit={props.onEdit}
+        onDelete={props.onDelete}
       />
     );
   }
@@ -148,6 +150,7 @@ function AdminScheduleContent({
   instructors,
   onAdd,
   onEdit,
+  onDelete,
 }: {
   studios: Studio[];
   schedule: ScheduleEntry[];
@@ -155,6 +158,7 @@ function AdminScheduleContent({
   instructors: Instructor[];
   onAdd: () => void;
   onEdit: (entry: ScheduleEntry) => void;
+  onDelete: (entry: ScheduleEntry) => void;
 }) {
   const [selectedStudio, setSelectedStudio] = useState<string>(studios[0]?.id || '');
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
@@ -212,10 +216,6 @@ function AdminScheduleContent({
       <Plus className="h-4 w-4" /> Добави час
     </Button>
   );
-
-  const handleDelete = (entry: ScheduleEntry) => {
-    toast.success(`"${entry.className}" беше изтрит от разписанието.`);
-  };
 
   return (
     <div className="space-y-6">
@@ -320,7 +320,14 @@ function AdminScheduleContent({
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(entry)}>
                   <Edit className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(entry)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onDelete(entry)}
+                  aria-label={`Изтриване на ${entry.className}`}
+                >
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
               </div>

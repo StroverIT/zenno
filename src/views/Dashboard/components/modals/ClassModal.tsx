@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,26 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, YOGA_TYPES } from '@/data/mock-data';
+import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, YOGA_TYPES, type YogaClass } from '@/data/mock-data';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете всички опции (инструктор, студио, тип йога, ниво) преди запазване.';
+
+export type ClassModalPayload = {
+  id?: string;
+  studioId: string;
+  instructorId: string;
+  name: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  price: number;
+  yogaType: string;
+  difficulty: string;
+  cancellationPolicy: string;
+  waitingList?: string[];
+};
 
 export function ClassModal({
   open,
@@ -19,12 +35,14 @@ export function ClassModal({
   onSave,
   studios,
   instructors,
+  classToEdit,
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (payload: ClassModalPayload) => void | Promise<void>;
   studios: typeof mockStudios;
   instructors: typeof mockInstructors;
+  classToEdit?: YogaClass | null;
 }) {
   const [className, setClassName] = useState('');
   const [instructorId, setInstructorId] = useState('');
@@ -37,9 +55,29 @@ export function ClassModal({
   const [maxCapacity, setMaxCapacity] = useState('');
   const [price, setPrice] = useState('');
   const [cancellationPolicy, setCancellationPolicy] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const instructorsForStudio = useMemo(
+    () => (studioId ? instructors.filter(i => i.studioId === studioId) : []),
+    [instructors, studioId],
+  );
 
   useEffect(() => {
     if (!open) return;
+    if (classToEdit) {
+      setClassName(classToEdit.name);
+      setInstructorId(classToEdit.instructorId);
+      setStudioId(classToEdit.studioId);
+      setDate(classToEdit.date);
+      setStartTime(classToEdit.startTime);
+      setEndTime(classToEdit.endTime);
+      setYogaType(classToEdit.yogaType);
+      setDifficulty(classToEdit.difficulty);
+      setMaxCapacity(String(classToEdit.maxCapacity));
+      setPrice(String(classToEdit.price));
+      setCancellationPolicy(classToEdit.cancellationPolicy);
+      return;
+    }
     setClassName('');
     setInstructorId('');
     setStudioId('');
@@ -51,11 +89,18 @@ export function ClassModal({
     setMaxCapacity('');
     setPrice('');
     setCancellationPolicy('');
-  }, [open]);
+  }, [open, classToEdit]);
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (!studioId || !instructorId) return;
+    if (!instructors.some(i => i.id === instructorId && i.studioId === studioId)) {
+      setInstructorId('');
+    }
+  }, [studioId, instructorId, instructors]);
+
+  const handleSave = async () => {
     const cap = Number(maxCapacity);
-    const pr = Number(price);
+    const pr = Math.round(Number(price));
     if (
       !className.trim()
       || !instructorId
@@ -69,22 +114,47 @@ export function ClassModal({
       || !Number.isFinite(cap)
       || cap <= 0
       || !price.trim()
-      || !Number.isFinite(pr)
-      || pr < 0
+      || !Number.isFinite(Number(price))
+      || Number(price) < 0
       || !cancellationPolicy.trim()
     ) {
       toast.error(INCOMPLETE_MSG);
       return;
     }
-    onSave();
+    setSaving(true);
+    try {
+      await Promise.resolve(
+        onSave({
+          id: classToEdit?.id,
+          studioId,
+          instructorId,
+          name: className.trim(),
+          date,
+          startTime,
+          endTime,
+          maxCapacity: cap,
+          price: pr,
+          yogaType,
+          difficulty,
+          cancellationPolicy: cancellationPolicy.trim(),
+          waitingList: classToEdit?.waitingList,
+        }),
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Клас</DialogTitle>
-          <DialogDescription>Добавете или редактирайте информация за клас</DialogDescription>
+          <DialogTitle className="font-display text-xl">
+            {classToEdit ? 'Редактирай клас' : 'Нов клас'}
+          </DialogTitle>
+          <DialogDescription>
+            {classToEdit ? 'Променете данните и запазете.' : 'Добавете информация за новия клас.'}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div>
@@ -98,21 +168,6 @@ export function ClassModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Инструктор</Label>
-              <Select value={instructorId || undefined} onValueChange={setInstructorId}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Изберете" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructors.map(i => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
               <Label>Студио</Label>
               <Select value={studioId || undefined} onValueChange={setStudioId}>
                 <SelectTrigger className="mt-1">
@@ -122,6 +177,25 @@ export function ClassModal({
                   {studios.map(s => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Инструктор</Label>
+              <Select
+                value={instructorId || undefined}
+                onValueChange={setInstructorId}
+                disabled={!studioId || instructorsForStudio.length === 0}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={studioId ? 'Изберете' : 'Първо изберете студио'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {instructorsForStudio.map(i => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -191,7 +265,7 @@ export function ClassModal({
               <Input
                 type="number"
                 min={0}
-                step="0.01"
+                step="1"
                 placeholder="25"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
@@ -213,7 +287,9 @@ export function ClassModal({
           <Button variant="outline" onClick={onClose}>
             Отказ
           </Button>
-          <Button onClick={handleSave}>Запази</Button>
+          <Button onClick={() => void handleSave()} disabled={saving}>
+            {saving ? 'Запазване…' : 'Запази'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

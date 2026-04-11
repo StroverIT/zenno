@@ -3,9 +3,19 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { ScheduleContent } from '@/components/schedule/schedule-content';
-import { ScheduleModal } from '@/views/Dashboard/components/modals/ScheduleModal';
 import type { ScheduleEntry } from '@/data/mock-data';
+import { ScheduleModal, type ScheduleModalPayload } from '@/views/Dashboard/components/modals/ScheduleModal';
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
 import { useDashboardWorkspace } from '@/hooks/useDashboardWorkspace';
@@ -15,12 +25,67 @@ export default function DashboardSchedulePage() {
   const { myStudios, myInstructors } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<ScheduleEntry | null>(null);
+  const [entryPendingDelete, setEntryPendingDelete] = useState<ScheduleEntry | null>(null);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
 
-  const handleSave = () => {
-    toastDashboardSaved('schedule');
+  const closeModal = () => {
     setScheduleModalOpen(false);
     setEditingSchedule(null);
+  };
+
+  const closeDeleteDialog = () => {
+    if (deleteInProgress) return;
+    setEntryPendingDelete(null);
+  };
+
+  const handleSave = async (payload: ScheduleModalPayload) => {
+    const isEdit = Boolean(payload.id);
+    const res = await fetch(isEdit ? `/api/dashboard/schedule/${payload.id}` : '/api/dashboard/schedule', {
+      method: isEdit ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studioId: payload.studioId,
+        instructorId: payload.instructorId,
+        className: payload.className,
+        yogaType: payload.yogaType,
+        difficulty: payload.difficulty,
+        day: payload.day,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+        maxCapacity: payload.maxCapacity,
+        price: payload.price,
+        isRecurring: payload.isRecurring,
+      }),
+    });
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(typeof j.error === 'string' ? j.error : `Неуспешно запазване (${res.status})`);
+      return;
+    }
+    toastDashboardSaved('schedule');
+    closeModal();
     void ws.reload();
+  };
+
+  const confirmDeleteEntry = async () => {
+    if (!entryPendingDelete) return;
+    setDeleteInProgress(true);
+    try {
+      const res = await fetch(`/api/dashboard/schedule/${entryPendingDelete.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(typeof j.error === 'string' ? j.error : `Неуспешно изтриване (${res.status})`);
+        return;
+      }
+      toast.success('Часът беше изтрит от разписанието.');
+      if (editingSchedule?.id === entryPendingDelete.id) {
+        closeModal();
+      }
+      setEntryPendingDelete(null);
+      void ws.reload();
+    } finally {
+      setDeleteInProgress(false);
+    }
   };
 
   if (ws.loading) return <div className="text-muted-foreground">Зареждане…</div>;
@@ -42,17 +107,39 @@ export default function DashboardSchedulePage() {
           setEditingSchedule(null);
           setScheduleModalOpen(true);
         }}
-        onEdit={(entry) => {
+        onEdit={entry => {
           setEditingSchedule(entry);
           setScheduleModalOpen(true);
         }}
+        onDelete={(entry: ScheduleEntry) => setEntryPendingDelete(entry)}
       />
+      <AlertDialog open={entryPendingDelete !== null} onOpenChange={open => !open && closeDeleteDialog()}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader className="sm:text-center">
+            <AlertDialogTitle className="font-display">Изтриване от разписание</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Сигурни ли сте, че искате да изтриете часа{' '}
+              <span className="font-medium text-foreground">{entryPendingDelete?.className}</span>? Това действие
+              не може да бъде отменено.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center sm:space-x-2">
+            <AlertDialogCancel disabled={deleteInProgress}>Отказ</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteInProgress}
+              className="mt-2 sm:mt-0"
+              onClick={() => void confirmDeleteEntry()}
+            >
+              {deleteInProgress ? 'Изтриване…' : 'Изтрий'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <ScheduleModal
         open={scheduleModalOpen}
-        onClose={() => {
-          setScheduleModalOpen(false);
-          setEditingSchedule(null);
-        }}
+        onClose={closeModal}
         onSave={handleSave}
         studios={myStudios}
         instructors={myInstructors}

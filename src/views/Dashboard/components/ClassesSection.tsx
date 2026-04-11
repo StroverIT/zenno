@@ -17,6 +17,7 @@ export function ClassesSection({
   instructors,
   onAdd,
   onEdit,
+  onDelete,
   addDisabled = false,
   addDisabledHint,
   addDisabledTooltip,
@@ -25,7 +26,8 @@ export function ClassesSection({
   studios: Studio[];
   instructors: Instructor[];
   onAdd: () => void;
-  onEdit: () => void;
+  onEdit: (cls: YogaClass) => void;
+  onDelete: (cls: YogaClass) => void;
   addDisabled?: boolean;
   addDisabledHint?: ReactNode;
   addDisabledTooltip?: string;
@@ -97,10 +99,17 @@ export function ClassesSection({
                       </span>
                     </div>
                     <div className="flex shrink-0 gap-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={onEdit}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onEdit(cls)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => onDelete(cls)}
+                        aria-label={`Изтриване на ${cls.name}`}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -167,10 +176,17 @@ export function ClassesSection({
                 </div>
 
                 <div className="hidden shrink-0 flex-col gap-1 self-start border-l border-border/50 pl-4 pt-0.5 md:flex">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(cls)}>
                     <Edit className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onDelete(cls)}
+                    aria-label={`Изтриване на ${cls.name}`}
+                  >
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>

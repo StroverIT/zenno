@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,21 @@ import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, WEEKDAYS, YOGA_TYPES, 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете студио, инструктор, ден, тип йога и ниво преди запазване.';
 
+export type ScheduleModalPayload = {
+  id?: string;
+  studioId: string;
+  instructorId: string;
+  className: string;
+  yogaType: string;
+  difficulty: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  price: number;
+  isRecurring: boolean;
+};
+
 export function ScheduleModal({
   open,
   onClose,
@@ -24,7 +39,7 @@ export function ScheduleModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (payload: ScheduleModalPayload) => void | Promise<void>;
   studios: typeof mockStudios;
   instructors: typeof mockInstructors;
   entry: ScheduleEntry | null;
@@ -40,6 +55,12 @@ export function ScheduleModal({
   const [maxCapacity, setMaxCapacity] = useState('');
   const [price, setPrice] = useState('');
   const [isRecurring, setIsRecurring] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const instructorsForStudio = useMemo(
+    () => (studioId ? instructors.filter(i => i.studioId === studioId) : []),
+    [instructors, studioId],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -56,9 +77,16 @@ export function ScheduleModal({
     setIsRecurring(entry?.isRecurring ?? true);
   }, [open, entry]);
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (!studioId || !instructorId) return;
+    if (!instructors.some(i => i.id === instructorId && i.studioId === studioId)) {
+      setInstructorId('');
+    }
+  }, [studioId, instructorId, instructors]);
+
+  const handleSave = async () => {
     const cap = Number(maxCapacity);
-    const pr = Number(price);
+    const pr = Math.round(Number(price));
     if (
       !className.trim()
       || !studioId
@@ -72,20 +100,42 @@ export function ScheduleModal({
       || !Number.isFinite(cap)
       || cap <= 0
       || !price.trim()
-      || !Number.isFinite(pr)
-      || pr < 0
+      || !Number.isFinite(Number(price))
+      || Number(price) < 0
     ) {
       toast.error(INCOMPLETE_MSG);
       return;
     }
-    onSave();
+    setSaving(true);
+    try {
+      await Promise.resolve(
+        onSave({
+          id: entry?.id,
+          studioId,
+          instructorId,
+          className: className.trim(),
+          yogaType,
+          difficulty,
+          day,
+          startTime,
+          endTime,
+          maxCapacity: cap,
+          price: pr,
+          isRecurring,
+        }),
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">{entry ? 'Редактирай час' : 'Добави час в разписание'}</DialogTitle>
+          <DialogTitle className="font-display text-xl">
+            {entry ? 'Редактирай час' : 'Добави час в разписание'}
+          </DialogTitle>
           <DialogDescription>Задайте седмично повтарящ се час за вашето студио</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
@@ -116,12 +166,16 @@ export function ScheduleModal({
             </div>
             <div>
               <Label>Инструктор</Label>
-              <Select value={instructorId || undefined} onValueChange={setInstructorId}>
+              <Select
+                value={instructorId || undefined}
+                onValueChange={setInstructorId}
+                disabled={!studioId || instructorsForStudio.length === 0}
+              >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Изберете" />
+                  <SelectValue placeholder={studioId ? 'Изберете' : 'Първо изберете студио'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {instructors.map(i => (
+                  {instructorsForStudio.map(i => (
                     <SelectItem key={i.id} value={i.id}>
                       {i.name}
                     </SelectItem>
@@ -204,7 +258,7 @@ export function ScheduleModal({
               <Input
                 type="number"
                 min={0}
-                step="0.01"
+                step="1"
                 placeholder="25"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
@@ -224,7 +278,9 @@ export function ScheduleModal({
           <Button variant="outline" onClick={onClose}>
             Отказ
           </Button>
-          <Button onClick={handleSave}>{entry ? 'Запази промените' : 'Добави'}</Button>
+          <Button onClick={() => void handleSave()} disabled={saving}>
+            {saving ? 'Запазване…' : entry ? 'Запази промените' : 'Добави'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

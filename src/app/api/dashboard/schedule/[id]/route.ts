@@ -27,6 +27,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     price: number;
     isRecurring: boolean;
     instructorId: string;
+    studioId: string;
   }>;
   try {
     body = await request.json();
@@ -45,12 +46,31 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (typeof body.price === 'number') data.price = body.price;
   if (typeof body.isRecurring === 'boolean') data.isRecurring = body.isRecurring;
 
+  let nextStudioId = existing.studioId;
+  if (typeof body.studioId === 'string') {
+    const t = body.studioId.trim();
+    if (!t) return jsonError('Invalid studioId', 400);
+    if (t !== existing.studioId) {
+      const accessNew = await assertStudioWriteAccess(gate.user, t);
+      if (!accessNew.ok) return accessNew.response;
+      data.studioId = t;
+    }
+    nextStudioId = t;
+  }
+
   if (typeof body.instructorId === 'string') {
     const ins = await prisma.instructor.findFirst({
-      where: { id: body.instructorId, studioId: existing.studioId },
+      where: { id: body.instructorId, studioId: nextStudioId },
     });
     if (!ins) return jsonError('Instructor not in this studio', 400);
     data.instructorId = body.instructorId;
+  } else if (typeof body.studioId === 'string' && body.studioId.trim() && body.studioId.trim() !== existing.studioId) {
+    const ins = await prisma.instructor.findFirst({
+      where: { id: existing.instructorId, studioId: body.studioId.trim() },
+    });
+    if (!ins) {
+      return jsonError('Текущият инструктор не принадлежи към избраното студио.', 400);
+    }
   }
 
   if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
