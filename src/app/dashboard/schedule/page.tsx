@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { ScheduleSection } from '@/views/Dashboard/components/ScheduleSection';
+import { ScheduleContent } from '@/components/schedule/schedule-content';
 import { ScheduleModal } from '@/views/Dashboard/components/modals/ScheduleModal';
 import type { ScheduleEntry } from '@/data/mock-data';
 import { getDashboardMockData } from '@/views/Dashboard/dashboardMockData';
@@ -21,7 +21,8 @@ export default function DashboardSchedulePage() {
 
   return (
     <>
-      <ScheduleSection
+      <ScheduleContent
+        variant="admin"
         studios={myStudios}
         onAdd={() => {
           setEditingSchedule(null);

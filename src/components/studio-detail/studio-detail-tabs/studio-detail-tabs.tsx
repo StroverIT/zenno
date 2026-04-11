@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { EventsTabContent } from './events-tab-content';
 import { InstructorsTabContent } from './instructors-tab-content';
 import { ReviewsTabContent } from './reviews-tab-content';
-import { ScheduleTabContent } from './schedule-tab-content';
+import { ScheduleContent } from '@/components/schedule/schedule-content';
 import { StudioDetailTabBar } from './studio-detail-tab-bar';
 import type { TabKey } from './types';
 
@@ -47,7 +47,8 @@ export function StudioDetailTabs({
 
       <div className="mt-6">
         {activeTab === 'schedule' && (
-          <ScheduleTabContent
+          <ScheduleContent
+            variant="user"
             studioSchedule={studioSchedule}
             subscription={subscription}
             isAuthenticated={isAuthenticated}
