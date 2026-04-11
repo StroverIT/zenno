@@ -1,8 +1,5 @@
-"use client";
+import { redirect } from 'next/navigation';
 
-import Admin from "@/views/Admin";
-
-export default function AdminPage() {
-  return <Admin />;
+export default function AdminIndexPage() {
+  redirect('/admin/overview');
 }
-

@@ -1,1 +1,6 @@
-export type AdminSectionKey = 'overview' | 'studios' | 'users' | 'reviews' | 'requests';
+export const ADMIN_SECTION_KEYS = ['overview', 'studios', 'users', 'reviews', 'requests'] as const;
+export type AdminSectionKey = (typeof ADMIN_SECTION_KEYS)[number];
+
+export function isAdminSectionKey(value: string): value is AdminSectionKey {
+  return (ADMIN_SECTION_KEYS as readonly string[]).includes(value);
+}

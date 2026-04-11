@@ -1,8 +1,12 @@
 'use client';
 
-import { Building2, Calendar, Star, Users } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import type { Review, Studio, YogaClass } from '@/data/mock-data';
+import Link from 'next/link';
+import { Building2, Calendar, CreditCard, Star, Users } from 'lucide-react';
+import { useMemo } from 'react';
+import type { Review, Studio, SubscriptionRequestStatus, YogaClass } from '@/data/mock-data';
+import type { AdminEnrollmentRow, AdminOverviewData, AdminSubscriptionRequestListItem } from '@/lib/admin-queries';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { StatCard } from '../components/StatCard';
 
 const LIST_LIMIT = 5;
@@ -15,37 +19,30 @@ function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('bg-BG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-type EnrollmentRow = {
-  id: string;
-  userName: string;
-  className: string;
-  studioName: string;
-  enrolledAt: string;
-};
+function subscriptionStatusBadge(status: SubscriptionRequestStatus) {
+  switch (status) {
+    case 'PENDING':
+      return <Badge variant="secondary">Изчаква</Badge>;
+    case 'ACCEPTED':
+      return <Badge className="bg-emerald-600 hover:bg-emerald-600/90">Одобрена</Badge>;
+    case 'DECLINED':
+      return <Badge variant="destructive">Отказана</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+}
 
-export function AdminOverview() {
-  const [studios, setStudios] = useState<Studio[]>([]);
-  const [classes, setClasses] = useState<YogaClass[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
-  const [userCount, setUserCount] = useState(0);
+export type AdminOverviewClientProps = AdminOverviewData;
 
-  useEffect(() => {
-    Promise.all([
-      fetch('/api/admin/studios').then((r) => (r.ok ? r.json() : { studios: [] })),
-      fetch('/api/public/studios').then((r) => (r.ok ? r.json() : { classes: [] })),
-      fetch('/api/admin/reviews').then((r) => (r.ok ? r.json() : { reviews: [] })),
-      fetch('/api/admin/recent-enrollments').then((r) => (r.ok ? r.json() : { enrollments: [] })),
-      fetch('/api/admin/users').then((r) => (r.ok ? r.json() : { users: [] })),
-    ]).then(([stRes, pubRes, revRes, enrRes, usersRes]) => {
-      setStudios(stRes.studios ?? []);
-      setClasses(pubRes.classes ?? []);
-      setReviews(revRes.reviews ?? []);
-      setEnrollments(enrRes.enrollments ?? []);
-      setUserCount((usersRes.users as unknown[] | undefined)?.length ?? 0);
-    });
-  }, []);
-
+export function AdminOverviewClient({
+  studios,
+  classes,
+  reviews,
+  enrollments,
+  users,
+  subscriptionRequests,
+}: AdminOverviewClientProps) {
+  const userCount = users.length;
   const totalEnrollments = classes.reduce((s, c) => s + c.enrolled, 0);
 
   const recentStudios = useMemo(
@@ -59,6 +56,10 @@ export function AdminOverview() {
   const recentReviews = useMemo(
     () => [...reviews].sort((a, b) => b.date.localeCompare(a.date)).slice(0, LIST_LIMIT),
     [reviews],
+  );
+  const recentSubscriptionRequests = useMemo(
+    () => [...subscriptionRequests].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, LIST_LIMIT),
+    [subscriptionRequests],
   );
 
   return (
@@ -74,7 +75,7 @@ export function AdminOverview() {
         <div className="rounded-2xl border border-border bg-white p-6 shadow-md">
           <h3 className="font-display text-lg font-semibold text-foreground mb-4">Последно създадени студиа</h3>
           <div className="space-y-3">
-            {recentStudios.map(studio => (
+            {recentStudios.map((studio: Studio) => (
               <div key={studio.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg">🧘</div>
                 <div className="flex-1 min-w-0">
@@ -94,7 +95,7 @@ export function AdminOverview() {
         <div className="rounded-2xl border border-border bg-white p-6 shadow-md">
           <h3 className="font-display text-lg font-semibold text-foreground mb-4">Последните 5 записвания</h3>
           <div className="space-y-3">
-            {recentEnrollments.map(row => (
+            {recentEnrollments.map((row: AdminEnrollmentRow) => (
               <div key={row.id} className="p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <span className="font-medium text-foreground text-sm">{row.userName}</span>
@@ -110,7 +111,7 @@ export function AdminOverview() {
         <div className="rounded-2xl border border-border bg-white p-6 shadow-md">
           <h3 className="font-display text-lg font-semibold text-foreground mb-4">Последните 5 създадени ревюта</h3>
           <div className="space-y-3">
-            {recentReviews.map(review => (
+            {recentReviews.map((review: Review) => (
               <div key={review.id} className="p-3 rounded-xl bg-muted/50">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="font-medium text-foreground text-sm truncate">{review.userName}</span>
@@ -122,6 +123,42 @@ export function AdminOverview() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-border bg-white p-6 shadow-md">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h3 className="font-display text-lg font-semibold text-foreground">Последни 5 заявки за абонамент</h3>
+          <Button variant="outline" size="sm" className="rounded-xl shrink-0" asChild>
+            <Link href="/admin/requests">Управление на заявки</Link>
+          </Button>
+        </div>
+        {recentSubscriptionRequests.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Няма заявки за абонамент.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {recentSubscriptionRequests.map((req: AdminSubscriptionRequestListItem) => (
+              <div key={req.id} className="flex gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                    <span className="font-medium text-foreground text-sm truncate">{req.studioName}</span>
+                    {subscriptionStatusBadge(req.status)}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {req.ownerName || '—'}
+                    {req.ownerEmail ? ` · ${req.ownerEmail}` : ''}
+                  </p>
+                  <p className="text-sm font-medium text-foreground mt-1 truncate">{req.name}</p>
+                  <p className="text-xs text-primary font-semibold tabular-nums">{req.monthlyPrice} лв./мес.</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{req.includes}</p>
+                  <p className="text-[11px] text-muted-foreground/90 mt-1.5">{formatDateTime(req.createdAt)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

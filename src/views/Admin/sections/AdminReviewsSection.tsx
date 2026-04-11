@@ -1,20 +1,17 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import type { Review } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Star, Trash2 } from 'lucide-react';
 
-export function AdminReviewsSection() {
-  const [search, setSearch] = useState('');
-  const [reviews, setReviews] = useState<Review[]>([]);
+export type AdminReviewsSectionClientProps = {
+  reviews: Review[];
+};
 
-  useEffect(() => {
-    fetch('/api/admin/reviews')
-      .then((r) => (r.ok ? r.json() : { reviews: [] }))
-      .then((j: { reviews: Review[] }) => setReviews(j.reviews ?? []));
-  }, []);
+export function AdminReviewsSectionClient({ reviews }: AdminReviewsSectionClientProps) {
+  const [search, setSearch] = useState('');
 
   const filteredReviews = useMemo(() => {
     const q = search.trim().toLowerCase();

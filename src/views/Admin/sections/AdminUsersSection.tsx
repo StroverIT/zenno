@@ -1,28 +1,19 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import type { Role } from '@prisma/client';
+import type { AdminUserRow } from '@/lib/admin-queries';
 
-type AdminUserRow = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  role: Role;
+export type AdminUsersSectionClientProps = {
+  users: AdminUserRow[];
 };
 
-export function AdminUsersSection() {
+export function AdminUsersSectionClient({ users }: AdminUsersSectionClientProps) {
   const [search, setSearch] = useState('');
-  const [users, setUsers] = useState<AdminUserRow[]>([]);
-
-  useEffect(() => {
-    fetch('/api/admin/users')
-      .then((r) => (r.ok ? r.json() : { users: [] }))
-      .then((j: { users: AdminUserRow[] }) => setUsers(j.users ?? []));
-  }, []);
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();

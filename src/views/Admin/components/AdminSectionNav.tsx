@@ -1,6 +1,10 @@
+'use client';
+
 import { BarChart3, Building2, Inbox, Star, Users } from 'lucide-react';
+import Link from 'next/link';
+import { useSelectedLayoutSegment } from 'next/navigation';
 import type { ReactNode } from 'react';
-import type { AdminSectionKey } from '../types';
+import { isAdminSectionKey, type AdminSectionKey } from '../types';
 
 const sections: { key: AdminSectionKey; label: string; icon: ReactNode }[] = [
   { key: 'overview', label: 'Преглед', icon: <BarChart3 className="h-4 w-4" /> },
@@ -10,19 +14,18 @@ const sections: { key: AdminSectionKey; label: string; icon: ReactNode }[] = [
   { key: 'requests', label: 'Заявки', icon: <Inbox className="h-4 w-4" /> },
 ];
 
-type AdminSectionNavProps = {
-  activeSection: AdminSectionKey;
-  onSectionChange: (key: AdminSectionKey) => void;
-};
+export function AdminSectionNav() {
+  const segment = useSelectedLayoutSegment();
+  const activeSection: AdminSectionKey =
+    segment && isAdminSectionKey(segment) ? segment : 'overview';
 
-export function AdminSectionNav({ activeSection, onSectionChange }: AdminSectionNavProps) {
   return (
     <div className="flex w-fit max-w-full gap-1 p-1 bg-muted rounded-xl mb-8 overflow-x-auto">
       {sections.map(s => (
-        <button
+        <Link
           key={s.key}
-          type="button"
-          onClick={() => onSectionChange(s.key)}
+          href={`/admin/${s.key}`}
+          scroll={false}
           className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeSection === s.key ? 'text-foreground bg-white' : 'text-muted-foreground hover:text-foreground/70'
             }`}
         >
@@ -30,7 +33,7 @@ export function AdminSectionNav({ activeSection, onSectionChange }: AdminSection
             {s.icon}
             {s.label}
           </span>
-        </button>
+        </Link>
       ))}
     </div>
   );

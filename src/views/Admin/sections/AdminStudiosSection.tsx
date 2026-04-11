@@ -1,28 +1,27 @@
 'use client';
 
-import type { Studio } from '@/data/mock-data';
+import type { AdminStudioRow } from '@/lib/admin-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EyeOff, Search, Star, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-type AdminStudioRow = Studio & { ownerEmail?: string | null; ownerName?: string | null };
+export type AdminStudiosSectionClientProps = {
+  studios: AdminStudioRow[];
+};
 
-export function AdminStudiosSection() {
+export function AdminStudiosSectionClient({ studios }: AdminStudiosSectionClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [studios, setStudios] = useState<AdminStudioRow[]>([]);
 
-  useEffect(() => {
-    fetch('/api/admin/studios')
-      .then((r) => (r.ok ? r.json() : { studios: [] }))
-      .then((j: { studios: AdminStudioRow[] }) => setStudios(j.studios ?? []));
-  }, []);
-
-  const filtered = studios.filter(
-    (s) =>
-      !searchQuery ||
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s.ownerEmail ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
+  const filtered = useMemo(
+    () =>
+      studios.filter(
+        (s) =>
+          !searchQuery ||
+          s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (s.ownerEmail ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [studios, searchQuery],
   );
 
   return (

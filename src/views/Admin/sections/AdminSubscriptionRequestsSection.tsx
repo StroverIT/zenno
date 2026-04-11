@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -16,13 +17,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { SubscriptionRequestDto } from '@/data/mock-data';
+import type { AdminSubscriptionRequestListItem } from '@/lib/admin-queries';
 import { Building2, Check, CreditCard, X } from 'lucide-react';
 
-type ListItem = SubscriptionRequestDto & {
-  studioName: string;
-  ownerName: string;
-  ownerEmail: string;
+export type AdminSubscriptionRequestsSectionClientProps = {
+  requests: AdminSubscriptionRequestListItem[];
 };
 
 function formatWhen(iso: string) {
@@ -35,32 +34,11 @@ function formatWhen(iso: string) {
   });
 }
 
-export function AdminSubscriptionRequestsSection() {
-  const [requests, setRequests] = useState<ListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [declineTarget, setDeclineTarget] = useState<ListItem | null>(null);
+export function AdminSubscriptionRequestsSectionClient({ requests: initialRequests }: AdminSubscriptionRequestsSectionClientProps) {
+  const router = useRouter();
+  const [declineTarget, setDeclineTarget] = useState<AdminSubscriptionRequestListItem | null>(null);
   const [declineNote, setDeclineNote] = useState('');
   const [actionId, setActionId] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/subscription-requests');
-      const j = (await res.json().catch(() => ({}))) as { requests?: ListItem[] };
-      if (!res.ok) {
-        toast.error('Неуспешно зареждане на заявки.');
-        setRequests([]);
-        return;
-      }
-      setRequests(j.requests ?? []);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   const patch = async (id: string, action: 'accept' | 'decline', adminNote?: string) => {
     setActionId(id);
@@ -78,15 +56,11 @@ export function AdminSubscriptionRequestsSection() {
       toast.success(action === 'accept' ? 'Абонаментът е активиран за студиото.' : 'Заявката е отказана.');
       setDeclineTarget(null);
       setDeclineNote('');
-      await load();
+      router.refresh();
     } finally {
       setActionId(null);
     }
   };
-
-  if (loading) {
-    return <p className="text-sm text-muted-foreground">Зареждане…</p>;
-  }
 
   return (
     <div>
@@ -98,10 +72,10 @@ export function AdminSubscriptionRequestsSection() {
           </p>
         </div>
         <div className="divide-y divide-border">
-          {requests.length === 0 ? (
+          {initialRequests.length === 0 ? (
             <p className="text-sm text-muted-foreground px-5 py-10 text-center">Няма изчакващи заявки.</p>
           ) : (
-            requests.map(req => (
+            initialRequests.map(req => (
               <div key={req.id} className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex gap-3 min-w-0">
                   <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">

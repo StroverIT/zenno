@@ -10,18 +10,9 @@ export default withAuth(
       authorized: ({ req, token }) => {
         const pathname = req.nextUrl.pathname;
 
-        if (pathname.startsWith('/profile')) {
-          return !!token;
-        }
-
-        // if (!token) return false;
-
         // if (pathname.startsWith('/admin')) {
-        //   return (token as { role?: string })?.role === 'admin';
-        // }
-
-        // if (pathname.startsWith('/dashboard')) {
-        //   return (token as { role?: string })?.role === 'business';
+        //   if (!token) return false;
+        //   return (token as { role?: string }).role === 'admin';
         // }
 
         return true;
@@ -30,7 +21,7 @@ export default withAuth(
   },
 );
 
-export const config = {
-  matcher: ['/admin/:path*', '/dashboard', '/dashboard/:path*', '/profile', '/profile/:path*'],
-};
+// export const config = {
+//   matcher: ['/admin', '/admin/:path*', '/dashboard', '/dashboard/:path*', '/profile', '/profile/:path*'],
+// };
 

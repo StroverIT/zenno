@@ -1,1 +1,2 @@
-export { default } from './Admin';
+export { AdminHeader } from './components/AdminHeader';
+export { AdminSectionNav } from './components/AdminSectionNav';
