@@ -13,6 +13,7 @@ import { StudioDetailSummary } from '@/components/studio-detail/studio-detail-su
 import { StudioDetailTabs } from '@/components/studio-detail/studio-detail-tabs';
 import type { TabKey } from '@/components/studio-detail/studio-detail-tabs/types';
 import { StudioDetailSidebar } from '@/components/studio-detail/studio-detail-sidebar';
+import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
 
@@ -63,9 +64,7 @@ const StudioDetail = () => {
   }, [id]);
 
   if (payload === undefined) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center text-muted-foreground">Зареждане…</div>
-    );
+    return <StudioDetailPageSkeleton />;
   }
 
   if (!payload?.studio) {

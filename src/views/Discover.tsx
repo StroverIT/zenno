@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { DiscoverPageContent } from "@/components/discover/discover-page-content";
-import { Spinner } from "@/components/ui/spinner";
+import { DiscoverPageSkeleton } from "@/components/discover/discover-page-skeleton";
 
 const Discover = () => {
   return (
@@ -17,13 +17,7 @@ const Discover = () => {
           </p>
         </div>
 
-        <Suspense
-          fallback={
-            <div className="flex justify-center py-16">
-              <Spinner className="w-8 h-8 text-yoga-accent" />
-            </div>
-          }
-        >
+        <Suspense fallback={<DiscoverPageSkeleton />}>
           <DiscoverPageContent />
         </Suspense>
       </main>

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { DiscoverPageSkeleton } from "@/components/discover/discover-page-skeleton";
 import Discover from "@/views/Discover";
 
 export const metadata: Metadata = {
@@ -8,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function DiscoverPage() {
-  return <Discover />;
+  return (
+    <Suspense fallback={<DiscoverPageSkeleton />}>
+      <Discover />
+    </Suspense>
+  );
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
+import { StudioDetailPageSkeleton } from "@/components/studio-detail/studio-detail-page-skeleton";
 import StudioDetail from "@/views/StudioDetail";
 
 export default function StudioDetailPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto px-4 py-16 text-center text-muted-foreground">Зареждане…</div>}>
+    <Suspense fallback={<StudioDetailPageSkeleton />}>
       <StudioDetail />
     </Suspense>
   );
