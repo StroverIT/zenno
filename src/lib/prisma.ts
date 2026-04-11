@@ -9,7 +9,14 @@ function createPrismaClient() {
 }
 
 function isDelegateReady(client: PrismaClient): boolean {
-  return typeof (client as unknown as { yogaClass?: { findMany: unknown } }).yogaClass?.findMany === 'function';
+  const c = client as unknown as {
+    yogaClass?: { findMany: unknown };
+    subscriptionRequest?: { findMany: unknown };
+  };
+  return (
+    typeof c.yogaClass?.findMany === 'function' &&
+    typeof c.subscriptionRequest?.findMany === 'function'
+  );
 }
 
 let productionClient: PrismaClient | undefined;
@@ -38,7 +45,7 @@ function getClient(): PrismaClient {
 
 /**
  * Lazily resolves the Prisma client so dev survives `prisma generate` without restarting
- * (avoids a stale `globalThis.prisma` missing new delegates like `yogaClass`).
+ * (avoids a stale `globalThis.prisma` missing new delegates after schema changes).
  */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {

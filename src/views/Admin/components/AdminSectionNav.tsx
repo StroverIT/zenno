@@ -1,4 +1,4 @@
-import { BarChart3, Building2, Star, Users } from 'lucide-react';
+import { BarChart3, Building2, Inbox, Star, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { AdminSectionKey } from '../types';
 
@@ -7,6 +7,7 @@ const sections: { key: AdminSectionKey; label: string; icon: ReactNode }[] = [
   { key: 'studios', label: 'Студиа', icon: <Building2 className="h-4 w-4" /> },
   { key: 'users', label: 'Потребители', icon: <Users className="h-4 w-4" /> },
   { key: 'reviews', label: 'Ревюта', icon: <Star className="h-4 w-4" /> },
+  { key: 'requests', label: 'Заявки', icon: <Inbox className="h-4 w-4" /> },
 ];
 
 type AdminSectionNavProps = {

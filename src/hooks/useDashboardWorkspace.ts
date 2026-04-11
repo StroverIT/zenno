@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import type { Instructor, ScheduleEntry, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
+import type {
+  Instructor,
+  ScheduleEntry,
+  Studio,
+  StudioSubscription,
+  SubscriptionRequestDto,
+  YogaClass,
+} from '@/data/mock-data';
 
 type WorkspacePayload = {
   studios: Studio[];
@@ -9,6 +16,7 @@ type WorkspacePayload = {
   classes: YogaClass[];
   schedule: ScheduleEntry[];
   subscriptions: StudioSubscription[];
+  subscriptionRequests: SubscriptionRequestDto[];
 };
 
 export function useDashboardWorkspace() {
@@ -47,6 +55,7 @@ export function useDashboardWorkspace() {
     classes: data?.classes ?? [],
     schedule: data?.schedule ?? [],
     subscriptions: data?.subscriptions ?? [],
+    subscriptionRequests: data?.subscriptionRequests ?? [],
     loading,
     error,
     reload,

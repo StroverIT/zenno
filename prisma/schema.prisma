@@ -19,6 +19,12 @@ enum ReviewTargetType {
   class
 }
 
+enum SubscriptionRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -107,8 +113,9 @@ model Studio {
   instructors   Instructor[]
   classes       YogaClass[]
   schedule      ScheduleEntry[]
-  subscription  StudioSubscription?
-  favorites     Favorite[]
+  subscription          StudioSubscription?
+  subscriptionRequests  SubscriptionRequest[]
+  favorites             Favorite[]
 }
 
 model Instructor {
@@ -193,6 +200,23 @@ model StudioSubscription {
   hasMonthlySubscription Boolean @default(false)
   monthlyPrice           Float?
   subscriptionNote       String?
+}
+
+model SubscriptionRequest {
+  id           String                     @id @default(cuid())
+  studioId     String
+  studio       Studio                     @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  status       SubscriptionRequestStatus  @default(PENDING)
+  name         String
+  monthlyPrice Float
+  includes     String                     @db.Text
+  adminNote    String?                    @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studioId, status])
+  @@index([status, createdAt])
 }
 
 model RecentEnrollment {

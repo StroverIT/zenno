@@ -14,15 +14,15 @@ export default withAuth(
           return !!token;
         }
 
-        if (!token) return false;
+        // if (!token) return false;
 
-        if (pathname.startsWith('/admin')) {
-          return (token as { role?: string })?.role === 'admin';
-        }
+        // if (pathname.startsWith('/admin')) {
+        //   return (token as { role?: string })?.role === 'admin';
+        // }
 
-        if (pathname.startsWith('/dashboard')) {
-          return (token as { role?: string })?.role === 'business';
-        }
+        // if (pathname.startsWith('/dashboard')) {
+        //   return (token as { role?: string })?.role === 'business';
+        // }
 
         return true;
       },

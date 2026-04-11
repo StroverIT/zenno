@@ -95,6 +95,20 @@ export interface StudioSubscription {
   subscriptionNote?: string;
 }
 
+export type SubscriptionRequestStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
+
+export interface SubscriptionRequestDto {
+  id: string;
+  studioId: string;
+  status: SubscriptionRequestStatus;
+  name: string;
+  monthlyPrice: number;
+  includes: string;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const YOGA_TYPES = [
   'Хатха', 'Виняса', 'Ин', 'Аштанга', 'Бикрам', 'Кундалини',
   'Ресторативна', 'Пауър', 'Пренатална', 'Аеро йога'

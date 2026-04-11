@@ -8,6 +8,7 @@ import {
   subscriptionToDto,
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
+import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
 
 export const runtime = 'nodejs';
 
@@ -24,10 +25,11 @@ export async function GET() {
       classes: [],
       schedule: [],
       subscriptions: [],
+      subscriptionRequests: [],
     });
   }
 
-  const [studios, instructors, classes, schedule, subscriptions] = await Promise.all([
+  const [studios, instructors, classes, schedule, subscriptions, subscriptionRequests] = await Promise.all([
     prisma.studio.findMany({
       where: { id: { in: studioIds } },
       orderBy: { createdAt: 'desc' },
@@ -47,6 +49,10 @@ export async function GET() {
     prisma.studioSubscription.findMany({
       where: { studioId: { in: studioIds } },
     }),
+    prisma.subscriptionRequest.findMany({
+      where: { studioId: { in: studioIds } },
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
 
   return NextResponse.json({
@@ -55,5 +61,6 @@ export async function GET() {
     classes: classes.map(yogaClassToDto),
     schedule: schedule.map(scheduleEntryToDto),
     subscriptions: subscriptions.map(subscriptionToDto),
+    subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
   });
 }
