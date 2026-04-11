@@ -19,10 +19,10 @@ import { InstructorsSection } from '@/views/Dashboard/components/InstructorsSect
 import { InstructorModal, type InstructorModalPayload } from '@/views/Dashboard/components/modals/InstructorModal';
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
-import { useDashboardWorkspace } from '@/hooks/useDashboardWorkspace';
+import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
 
 export default function DashboardInstructorsPage() {
-  const ws = useDashboardWorkspace();
+  const ws = useDashboardWorkspaceContext();
   const { myStudios, myInstructors } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
   const [instructorModalOpen, setInstructorModalOpen] = useState(false);
   const [editingInstructor, setEditingInstructor] = useState<Instructor | null>(null);

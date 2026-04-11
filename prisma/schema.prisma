@@ -35,6 +35,10 @@ model User {
   image         String?
   /// Set when the business user dismisses the dashboard onboarding modal (shown once).
   dashboardOnboardingDismissedAt DateTime?
+  /// Setup guide widget: closed to sidebar vs floating (bottom-right).
+  dashboardSetupGuideDocked      Boolean @default(false)
+  /// Setup guide widget: minimized to chip vs expanded panel.
+  dashboardSetupGuideMinimized   Boolean @default(false)
 
   accounts       Account[]
   sessions       Session[]

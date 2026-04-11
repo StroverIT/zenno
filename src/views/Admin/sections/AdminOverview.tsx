@@ -5,6 +5,7 @@ import { Building2, Calendar, CreditCard, Star, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import type { Review, Studio, SubscriptionRequestStatus, YogaClass } from '@/data/mock-data';
 import type { AdminEnrollmentRow, AdminOverviewData, AdminSubscriptionRequestListItem } from '@/lib/admin-queries';
+import { calculateNetPayout, calculatePayoutFee } from '@/lib/payments';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '../components/StatCard';
@@ -61,6 +62,114 @@ export function AdminOverviewClient({
     () => [...subscriptionRequests].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, LIST_LIMIT),
     [subscriptionRequests],
   );
+  const classPriceByStudioAndName = useMemo(() => {
+    const studioNameById = new Map(studios.map((studio) => [studio.id, studio.name]));
+    const map = new Map<string, number>();
+    classes.forEach((cls) => {
+      const studioName = studioNameById.get(cls.studioId);
+      if (!studioName) return;
+      map.set(`${studioName}::${cls.name}`, cls.price);
+    });
+    return map;
+  }, [classes, studios]);
+  const userSpendRows = useMemo(() => {
+    const rows = new Map<string, { userName: string; amount: number; count: number; lastDate: string; sources: Map<string, number> }>();
+    enrollments.forEach((row) => {
+      const amount = classPriceByStudioAndName.get(`${row.studioName}::${row.className}`) ?? 0;
+      const existing = rows.get(row.userName) ?? {
+        userName: row.userName,
+        amount: 0,
+        count: 0,
+        lastDate: row.enrolledAt,
+        sources: new Map<string, number>(),
+      };
+      existing.amount += amount;
+      existing.count += 1;
+      if (row.enrolledAt > existing.lastDate) existing.lastDate = row.enrolledAt;
+      existing.sources.set(row.studioName, (existing.sources.get(row.studioName) ?? 0) + amount);
+      rows.set(row.userName, existing);
+    });
+    return [...rows.values()]
+      .sort((a, b) => b.amount - a.amount)
+      .map((row) => ({
+        ...row,
+        sourceSummary: [...row.sources.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([studioName, amount]) => `${studioName}: ${amount.toFixed(2)} лв.`)
+          .join(' · '),
+      }));
+  }, [classPriceByStudioAndName, enrollments]);
+  const businessRevenueRows = useMemo(() => {
+    const ownerByStudioId = new Map(studios.map((studio) => [studio.id, { ownerUserId: studio.ownerUserId, studioName: studio.name }]));
+    const usersById = new Map(users.map((user) => [user.id, user]));
+    const rows = new Map<
+      string,
+      {
+        ownerUserId: string;
+        ownerName: string;
+        ownerEmail: string;
+        gross: number;
+        classRevenue: number;
+        subscriptionRevenue: number;
+        sources: Map<string, number>;
+      }
+    >();
+
+    classes.forEach((cls) => {
+      const owner = ownerByStudioId.get(cls.studioId);
+      if (!owner) return;
+      const value = cls.enrolled * cls.price;
+      const user = usersById.get(owner.ownerUserId);
+      const existing = rows.get(owner.ownerUserId) ?? {
+        ownerUserId: owner.ownerUserId,
+        ownerName: user?.name ?? 'Без име',
+        ownerEmail: user?.email ?? '',
+        gross: 0,
+        classRevenue: 0,
+        subscriptionRevenue: 0,
+        sources: new Map<string, number>(),
+      };
+      existing.gross += value;
+      existing.classRevenue += value;
+      existing.sources.set(owner.studioName, (existing.sources.get(owner.studioName) ?? 0) + value);
+      rows.set(owner.ownerUserId, existing);
+    });
+
+    subscriptionRequests
+      .filter((req) => req.status === 'ACCEPTED')
+      .forEach((req) => {
+        const owner = ownerByStudioId.get(req.studioId);
+        if (!owner) return;
+        const user = usersById.get(owner.ownerUserId);
+        const existing = rows.get(owner.ownerUserId) ?? {
+          ownerUserId: owner.ownerUserId,
+          ownerName: user?.name ?? 'Без име',
+          ownerEmail: user?.email ?? '',
+          gross: 0,
+          classRevenue: 0,
+          subscriptionRevenue: 0,
+          sources: new Map<string, number>(),
+        };
+        existing.gross += req.monthlyPrice;
+        existing.subscriptionRevenue += req.monthlyPrice;
+        existing.sources.set(`${owner.studioName} (абонаменти)`, (existing.sources.get(`${owner.studioName} (абонаменти)`) ?? 0) + req.monthlyPrice);
+        rows.set(owner.ownerUserId, existing);
+      });
+
+    return [...rows.values()]
+      .sort((a, b) => b.gross - a.gross)
+      .map((row) => ({
+        ...row,
+        payoutFee: calculatePayoutFee(row.gross),
+        payoutNet: calculateNetPayout(row.gross),
+        sourceSummary: [...row.sources.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([source, amount]) => `${source}: ${amount.toFixed(2)} лв.`)
+          .join(' · '),
+      }));
+  }, [classes, studios, subscriptionRequests, users]);
 
   return (
     <div>
@@ -159,6 +268,56 @@ export function AdminOverviewClient({
             ))}
           </div>
         )}
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-md">
+          <h3 className="font-display text-lg font-semibold text-foreground mb-4">Разходи по потребители</h3>
+          {userSpendRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Няма данни за разходи на потребители.</p>
+          ) : (
+            <div className="space-y-3">
+              {userSpendRows.map((row) => (
+                <div key={row.userName} className="rounded-xl bg-muted/50 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-foreground text-sm">{row.userName}</p>
+                    <p className="text-sm font-semibold text-foreground">{row.amount.toFixed(2)} лв.</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{row.count} записвания · Последно плащане {formatDateTime(row.lastDate)}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{row.sourceSummary || 'Няма източник'}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-md">
+          <h3 className="font-display text-lg font-semibold text-foreground mb-4">Приходи по бизнес акаунт</h3>
+          {businessRevenueRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Няма данни за приходи на бизнес акаунти.</p>
+          ) : (
+            <div className="space-y-3">
+              {businessRevenueRows.map((row) => (
+                <div key={row.ownerUserId} className="rounded-xl bg-muted/50 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{row.ownerName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{row.ownerEmail || '—'}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">{row.gross.toFixed(2)} лв.</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Записвания: {row.classRevenue.toFixed(2)} лв. · Абонаменти: {row.subscriptionRevenue.toFixed(2)} лв.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Такса теглене: {row.payoutFee.toFixed(2)} лв. · Нетно: {row.payoutNet.toFixed(2)} лв.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{row.sourceSummary || 'Няма източник'}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

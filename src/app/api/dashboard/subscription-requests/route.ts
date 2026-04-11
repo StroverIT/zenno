@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
+import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 
 export const runtime = 'nodejs';
 
@@ -64,6 +65,21 @@ export async function POST(req: Request) {
       status: 'PENDING',
     },
   });
+
+  try {
+    await ensureStripeCatalogEntry({
+      name: `Subscription: ${created.name}`,
+      baseAmount: created.monthlyPrice,
+      recurringInterval: 'month',
+      metadata: {
+        type: 'subscription',
+        subscriptionRequestId: created.id,
+        studioId: created.studioId,
+      },
+    });
+  } catch (error) {
+    console.error('Stripe catalog sync failed for subscription request', created.id, error);
+  }
 
   return NextResponse.json({ request: subscriptionRequestToDto(created) }, { status: 201 });
 }

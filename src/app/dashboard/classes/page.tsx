@@ -19,10 +19,10 @@ import { ClassesSection } from '@/views/Dashboard/components/ClassesSection';
 import { ClassModal, type ClassModalPayload } from '@/views/Dashboard/components/modals/ClassModal';
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
-import { useDashboardWorkspace } from '@/hooks/useDashboardWorkspace';
+import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
 
 export default function DashboardClassesPage() {
-  const ws = useDashboardWorkspace();
+  const ws = useDashboardWorkspaceContext();
   const { myStudios, myClasses, myInstructors } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
   const [classModalOpen, setClassModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<YogaClass | null>(null);

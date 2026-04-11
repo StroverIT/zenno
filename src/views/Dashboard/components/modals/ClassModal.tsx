@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, YOGA_TYPES, type YogaClass } from '@/data/mock-data';
+import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете всички опции (инструктор, студио, тип йога, ниво) преди запазване.';
@@ -56,6 +57,10 @@ export function ClassModal({
   const [price, setPrice] = useState('');
   const [cancellationPolicy, setCancellationPolicy] = useState('');
   const [saving, setSaving] = useState(false);
+  const parsedPrice = Number(price);
+  const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedPrice) && parsedPrice >= 0;
+  const processingFee = hasValidBasePrice ? calculateOnlinePaymentFee(parsedPrice) : 0;
+  const finalCustomerAmount = hasValidBasePrice ? calculateFinalCustomerAmount(parsedPrice) : 0;
 
   const instructorsForStudio = useMemo(
     () => (studioId ? instructors.filter(i => i.studioId === studioId) : []),
@@ -271,6 +276,11 @@ export function ClassModal({
                 onChange={e => setPrice(e.target.value)}
                 className="mt-1"
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {hasValidBasePrice
+                  ? `Крайна цена за клиента: ${finalCustomerAmount.toFixed(2)} лв. (такса ${processingFee.toFixed(2)} лв. = 0.70 + 3%)`
+                  : 'Добавяме автоматично онлайн такса 0.70 + 3% при плащане.'}
+              </p>
             </div>
           </div>
           <div>

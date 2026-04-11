@@ -18,10 +18,10 @@ import type { ScheduleEntry } from '@/data/mock-data';
 import { ScheduleModal, type ScheduleModalPayload } from '@/views/Dashboard/components/modals/ScheduleModal';
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
-import { useDashboardWorkspace } from '@/hooks/useDashboardWorkspace';
+import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
 
 export default function DashboardSchedulePage() {
-  const ws = useDashboardWorkspace();
+  const ws = useDashboardWorkspaceContext();
   const { myStudios, myInstructors } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<ScheduleEntry | null>(null);

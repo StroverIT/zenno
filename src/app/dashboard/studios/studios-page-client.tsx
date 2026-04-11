@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
 import { StudiosSection } from '@/views/Dashboard/components/StudiosSection';
 import { StudioModal } from '@/views/Dashboard/components/modals/StudioModal';
+import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
 
 type DashboardStudiosPageClientProps = {
@@ -25,6 +26,7 @@ type DashboardStudiosPageClientProps = {
 
 export default function DashboardStudiosPageClient({ studios }: DashboardStudiosPageClientProps) {
   const router = useRouter();
+  const { reload: reloadWorkspace } = useDashboardWorkspaceContext();
   const [studioModalOpen, setStudioModalOpen] = useState(false);
   const [editingStudio, setEditingStudio] = useState<DashboardStudioListItem | null>(null);
   const [studioToDelete, setStudioToDelete] = useState<DashboardStudioListItem | null>(null);
@@ -34,6 +36,7 @@ export default function DashboardStudiosPageClient({ studios }: DashboardStudios
     toastDashboardSaved('studio');
     setStudioModalOpen(false);
     setEditingStudio(null);
+    void reloadWorkspace();
     router.refresh();
   };
 
@@ -54,6 +57,7 @@ export default function DashboardStudiosPageClient({ studios }: DashboardStudios
       }
       toast.success('Студиото беше изтрито.');
       setStudioToDelete(null);
+      void reloadWorkspace();
       router.refresh();
     } finally {
       setIsDeleting(false);

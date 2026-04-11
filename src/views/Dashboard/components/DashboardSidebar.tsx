@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { BarChart3, Building2, CalendarDays, ChevronRight, GraduationCap, LayoutDashboard, BookOpen } from 'lucide-react';
@@ -15,10 +16,16 @@ export function DashboardSidebar({
   displayName,
   activeSection,
   revenue,
+  setupGuide,
+  setupSectionHints,
 }: {
   displayName: string;
   activeSection: Section;
   revenue: number;
+  /** Optional block below main nav (e.g. setup guide entry when docked). */
+  setupGuide?: ReactNode;
+  /** When true for a section, show a secondary dot (incomplete setup step). */
+  setupSectionHints?: Partial<Record<Section, boolean>>;
 }) {
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-card/50 p-6 shrink-0">
@@ -29,6 +36,7 @@ export function DashboardSidebar({
       <nav className="space-y-1 flex-1">
         {sidebarItems.map(item => {
           const active = activeSection === item.key;
+          const showSetupDot = Boolean(setupSectionHints?.[item.key]);
           return (
             <Link
               key={item.key}
@@ -37,14 +45,23 @@ export function DashboardSidebar({
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                 }`}
+              aria-label={showSetupDot ? `${item.label} — незавършена стъпка от настройката` : undefined}
             >
-              <item.icon className="h-4.5 w-4.5" />
-              {item.label}
-              {active && <ChevronRight className="h-4 w-4 ml-auto" />}
+              <item.icon className="h-4.5 w-4.5 shrink-0" />
+              <span className="flex-1 truncate text-left">{item.label}</span>
+              {showSetupDot ? (
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${active ? 'bg-primary-foreground/90' : 'bg-secondary'}`}
+                  title="Пълнете тази стъпка в ръководството за настройка"
+                  aria-hidden
+                />
+              ) : null}
+              {active ? <ChevronRight className="h-4 w-4 shrink-0" /> : null}
             </Link>
           );
         })}
       </nav>
+      {setupGuide}
       <Separator className="my-4" />
       <div className="rounded-xl bg-primary/5 border border-primary/10 p-4">
         <div className="flex items-center gap-2 mb-2">

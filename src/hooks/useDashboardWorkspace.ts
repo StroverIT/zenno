@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   Instructor,
   ScheduleEntry,
@@ -23,9 +23,12 @@ export function useDashboardWorkspace() {
   const [data, setData] = useState<WorkspacePayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dataRef = useRef<WorkspacePayload | null>(null);
+  dataRef.current = data;
 
   const reload = useCallback(async () => {
-    setLoading(true);
+    const isFirstLoad = dataRef.current === null;
+    if (isFirstLoad) setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/dashboard/workspace');

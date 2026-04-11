@@ -1,5 +1,4 @@
 import type { NextAuthOptions } from 'next-auth';
-import type { Role } from '@prisma/client';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
@@ -52,28 +51,18 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       const t: any = token;
-
-      let dbUser: { role: Role; dashboardOnboardingDismissedAt: Date | null } | null = null;
       if (user) {
         const u: any = user;
         t.role = u.role ?? t.role ?? 'client';
-        const id = (u.id as string | undefined) ?? (t.sub as string | undefined);
-        if (id) {
-          dbUser = await prisma.user.findUnique({
-            where: { id },
-            select: { role: true, dashboardOnboardingDismissedAt: true },
-          });
-        }
-      } else if (t.sub || t.email) {
-        dbUser = await prisma.user.findUnique({
-          where: t.sub ? { id: t.sub as string } : { email: t.email as string },
-          select: { role: true, dashboardOnboardingDismissedAt: true },
-        });
       }
 
-      if (dbUser) {
-        t.role = dbUser.role;
-        t.dashboardOnboardingDismissedAt = dbUser.dashboardOnboardingDismissedAt?.toISOString() ?? null;
+      if (!user && (t.sub || t.email)) {
+        const dbUser = await prisma.user.findUnique({
+          where: t.sub ? { id: t.sub as string } : { email: t.email as string },
+        });
+        if (dbUser) {
+          t.role = dbUser.role;
+        }
       }
 
       return t;
@@ -83,7 +72,6 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = t.sub as string;
         (session.user as any).role = t.role ?? 'client';
-        (session.user as any).dashboardOnboardingDismissedAt = t.dashboardOnboardingDismissedAt ?? null;
       }
       return session;
     },

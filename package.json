@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "stripe:webhooks": "stripe listen --forward-to http://localhost:3000/api/webhooks/stripe"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

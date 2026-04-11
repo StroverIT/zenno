@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
+import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 
 export const runtime = 'nodejs';
 
@@ -90,6 +91,20 @@ export async function POST(request: Request) {
       waitingList: Array.isArray(body.waitingList) ? body.waitingList.filter((x) => typeof x === 'string') : [],
     },
   });
+
+  try {
+    await ensureStripeCatalogEntry({
+      name: `Class: ${created.name}`,
+      baseAmount: created.price,
+      metadata: {
+        type: 'class',
+        classId: created.id,
+        studioId: created.studioId,
+      },
+    });
+  } catch (error) {
+    console.error('Stripe catalog sync failed for class', created.id, error);
+  }
 
   return NextResponse.json({ class: yogaClassToDto(created) }, { status: 201 });
 }

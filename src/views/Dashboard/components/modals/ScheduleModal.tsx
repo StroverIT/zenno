@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, WEEKDAYS, YOGA_TYPES, type ScheduleEntry } from '@/data/mock-data';
+import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете студио, инструктор, ден, тип йога и ниво преди запазване.';
@@ -56,6 +57,10 @@ export function ScheduleModal({
   const [price, setPrice] = useState('');
   const [isRecurring, setIsRecurring] = useState(true);
   const [saving, setSaving] = useState(false);
+  const parsedPrice = Number(price);
+  const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedPrice) && parsedPrice >= 0;
+  const processingFee = hasValidBasePrice ? calculateOnlinePaymentFee(parsedPrice) : 0;
+  const finalCustomerAmount = hasValidBasePrice ? calculateFinalCustomerAmount(parsedPrice) : 0;
 
   const instructorsForStudio = useMemo(
     () => (studioId ? instructors.filter(i => i.studioId === studioId) : []),
@@ -264,6 +269,11 @@ export function ScheduleModal({
                 onChange={e => setPrice(e.target.value)}
                 className="mt-1"
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {hasValidBasePrice
+                  ? `Крайна цена за клиента: ${finalCustomerAmount.toFixed(2)} лв. (такса ${processingFee.toFixed(2)} лв. = 0.70 + 3%)`
+                  : 'Добавяме автоматично онлайн такса 0.70 + 3% при плащане.'}
+              </p>
             </div>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">

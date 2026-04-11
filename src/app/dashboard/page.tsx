@@ -2,10 +2,10 @@
 
 import { OverviewSection } from '@/views/Dashboard/components/OverviewSection';
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
-import { useDashboardWorkspace } from '@/hooks/useDashboardWorkspace';
+import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
 
 export default function DashboardOverviewPage() {
-  const ws = useDashboardWorkspace();
+  const ws = useDashboardWorkspaceContext();
   const {
     avgRating,
     totalEnrolled,
@@ -34,6 +34,8 @@ export default function DashboardOverviewPage() {
       myClasses={myClasses}
       myInstructors={myInstructors}
       revenue={revenue}
+      subscriptions={ws.subscriptions}
+      subscriptionRequests={ws.subscriptionRequests}
     />
   );
 }
