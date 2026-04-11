@@ -1,21 +1,35 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, ArrowRight, Users, Clock, Search } from "lucide-react";
+import {
+  Star,
+  MapPin,
+  ArrowRight,
+  Users,
+  Clock,
+  Search,
+  MessageSquareText,
+  Flower2,
+} from "lucide-react";
 
 export default function HeroSection({
   studioCount,
   classCount,
   totalEnrolled,
   avgRating,
+  totalReviews,
+  yogaStylesCount,
 }: {
   studioCount: number;
   classCount: number;
   totalEnrolled: number;
   avgRating: string;
+  totalReviews: number;
+  yogaStylesCount: number;
 }) {
   const { status } = useSession();
   const addStudioHref =
@@ -23,11 +37,28 @@ export default function HeroSection({
       ? "/dashboard/studios"
       : "/auth?type=register&role=business";
 
-  const stats = [
+  const fmt = (n: number) => n.toLocaleString("bg-BG");
+
+  const stats: { value: string; label: string; icon: ReactNode; hint?: string }[] = [
     { value: `${studioCount}+`, label: "Партньорски студиа", icon: <MapPin className="h-5 w-5" /> },
-    { value: `${classCount}+`, label: "Седмични класове", icon: <Clock className="h-5 w-5" /> },
-    { value: `${totalEnrolled}+`, label: "Доволни практикуващи", icon: <Users className="h-5 w-5" /> },
-    { value: avgRating, label: "Средна оценка", icon: <Star className="h-5 w-5" /> },
+    { value: `${classCount}+`, label: "Предстоящи класове", icon: <Clock className="h-5 w-5" /> },
+    { value: `${totalEnrolled}+`, label: "Записани места", icon: <Users className="h-5 w-5" /> },
+    {
+      value: avgRating,
+      label: "Средна оценка",
+      hint: totalReviews > 0 ? `от ${fmt(totalReviews)} отзива` : undefined,
+      icon: <Star className="h-5 w-5" />,
+    },
+    {
+      value: fmt(totalReviews),
+      label: "Отзиви в платформата",
+      icon: <MessageSquareText className="h-5 w-5" />,
+    },
+    {
+      value: fmt(yogaStylesCount),
+      label: "Стилове йога",
+      icon: <Flower2 className="h-5 w-5" />,
+    },
   ];
 
   return (
@@ -68,16 +99,17 @@ export default function HeroSection({
             </div>
           </div>
 
-          <div className="hidden lg:block">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="mt-10 lg:mt-0">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
               {stats.map((stat, i) => (
                 <div
                   key={i}
-                  className="hero-stat-card gsap-reveal-stagger rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-5 hover:shadow-md transition-shadow"
+                  className="hero-stat-card gsap-reveal-stagger rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-4 sm:p-5 hover:shadow-md transition-shadow"
                 >
                   <div className="text-yoga-accent mb-2">{stat.icon}</div>
-                  <p className="font-display text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="font-display text-xl font-bold text-foreground sm:text-2xl">{stat.value}</p>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  {stat.hint ? <p className="mt-1 text-xs text-muted-foreground/90">{stat.hint}</p> : null}
                 </div>
               ))}
             </div>
