@@ -70,7 +70,9 @@ const StudioDetail = () => {
           />
         </div>
 
-        <StudioDetailSidebar studio={studio} />
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <StudioDetailSidebar studio={studio} />
+        </div>
       </div>
     </div>
   );
