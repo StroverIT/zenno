@@ -1,5 +1,8 @@
+import type { ReactNode } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
 import { AlertCircle, Building2, Clock, Edit, GraduationCap, Plus, Trash2 } from 'lucide-react';
 
@@ -14,22 +17,53 @@ export function ClassesSection({
   instructors,
   onAdd,
   onEdit,
+  addDisabled = false,
+  addDisabledHint,
+  addDisabledTooltip,
 }: {
   classes: YogaClass[];
   studios: Studio[];
   instructors: Instructor[];
   onAdd: () => void;
   onEdit: () => void;
+  addDisabled?: boolean;
+  addDisabledHint?: ReactNode;
+  addDisabledTooltip?: string;
 }) {
+  const addButton = (
+    <Button
+      type="button"
+      disabled={addDisabled}
+      onClick={onAdd}
+      className="gap-2 shadow-sm shadow-primary/20"
+    >
+      <Plus className="h-4 w-4" /> Добави клас
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
       <DashboardPageHeader
         title="Класове"
         description={`${classes.length} класа — цени, ниво и заетост на един екран.`}
         actions={
-          <Button onClick={onAdd} className="gap-2 shadow-sm shadow-primary/20">
-            <Plus className="h-4 w-4" /> Добави клас
-          </Button>
+          <div className="flex max-w-md flex-col items-stretch gap-2 sm:items-end">
+            {addDisabled && addDisabledTooltip ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex justify-end">{addButton}</span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p>{addDisabledTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              addButton
+            )}
+            {addDisabled && addDisabledHint ? (
+              <p className="text-right text-xs leading-relaxed text-muted-foreground">{addDisabledHint}</p>
+            ) : null}
+          </div>
         }
       />
       <div className="space-y-4">

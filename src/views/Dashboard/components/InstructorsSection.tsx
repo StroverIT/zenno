@@ -1,6 +1,9 @@
+import type { ReactNode } from 'react';
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Instructor, Studio } from '@/data/mock-data';
 import { Building2, Edit, Plus, Star, Trash2 } from 'lucide-react';
 
@@ -12,21 +15,52 @@ export function InstructorsSection({
   studios,
   onAdd,
   onEdit,
+  addDisabled = false,
+  addDisabledHint,
+  addDisabledTooltip,
 }: {
   instructors: Instructor[];
   studios: Studio[];
   onAdd: () => void;
   onEdit: () => void;
+  addDisabled?: boolean;
+  addDisabledHint?: ReactNode;
+  addDisabledTooltip?: string;
 }) {
+  const addButton = (
+    <Button
+      type="button"
+      disabled={addDisabled}
+      onClick={onAdd}
+      className="gap-2 shadow-sm shadow-primary/20"
+    >
+      <Plus className="h-4 w-4" /> Добави инструктор
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
       <DashboardPageHeader
         title="Инструктори"
         description={`${instructors.length} инструктора — рейтинг, стилове и студио.`}
         actions={
-          <Button onClick={onAdd} className="gap-2 shadow-sm shadow-primary/20">
-            <Plus className="h-4 w-4" /> Добави инструктор
-          </Button>
+          <div className="flex max-w-md flex-col items-stretch gap-2 sm:items-end">
+            {addDisabled && addDisabledTooltip ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex justify-end">{addButton}</span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p>{addDisabledTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              addButton
+            )}
+            {addDisabled && addDisabledHint ? (
+              <p className="text-right text-xs leading-relaxed text-muted-foreground">{addDisabledHint}</p>
+            ) : null}
+          </div>
         }
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

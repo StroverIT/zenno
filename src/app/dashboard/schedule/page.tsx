@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { ScheduleContent } from '@/components/schedule/schedule-content';
 import { ScheduleModal } from '@/views/Dashboard/components/modals/ScheduleModal';
@@ -34,6 +35,10 @@ export default function DashboardSchedulePage() {
         subscriptions={ws.subscriptions}
         instructors={myInstructors}
         onAdd={() => {
+          if (myStudios.length === 0) {
+            toast.info('Първо създайте студио в раздел Студиа.');
+            return;
+          }
           setEditingSchedule(null);
           setScheduleModalOpen(true);
         }}

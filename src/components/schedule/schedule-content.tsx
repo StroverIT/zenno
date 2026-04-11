@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,8 +16,11 @@ import {
   type StudioSubscription,
   type Weekday,
 } from '@/data/mock-data';
+import Link from 'next/link';
 import { CalendarDays, CreditCard, Edit, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 type AdminProps = {
   variant: 'admin';
@@ -156,9 +159,59 @@ function AdminScheduleContent({
   const [selectedStudio, setSelectedStudio] = useState<string>(studios[0]?.id || '');
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
 
+  useEffect(() => {
+    if (studios.length === 0) {
+      setSelectedStudio('');
+      return;
+    }
+    setSelectedStudio(prev => {
+      if (prev && studios.some(s => s.id === prev)) return prev;
+      return studios[0].id;
+    });
+  }, [studios]);
+
   const studioSchedule = schedule.filter(s => s.studioId === selectedStudio);
   const subscription = subscriptions.find(s => s.studioId === selectedStudio);
   const scheduleByDay = buildScheduleByDay(studioSchedule);
+
+  const instructorsForStudio = instructors.filter(i => i.studioId === selectedStudio);
+  const addScheduleDisabled = studios.length === 0 || instructorsForStudio.length === 0;
+  const addScheduleTooltip =
+    studios.length === 0
+      ? 'Първо създайте студио в раздел Студиа.'
+      : 'Добавете поне един инструктор за избраното студио.';
+  const addScheduleHint =
+    studios.length === 0 ? (
+      <>
+        Първо създайте студио в раздел{' '}
+        <Link href="/dashboard/studios" className="font-medium text-primary underline-offset-4 hover:underline">
+          Студиа
+        </Link>
+        .
+      </>
+    ) : (
+      <>
+        Добавете поне един инструктор за избраното студио в раздел{' '}
+        <Link
+          href="/dashboard/instructors"
+          className="font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Инструктори
+        </Link>
+        .
+      </>
+    );
+
+  const addScheduleButton = (
+    <Button
+      type="button"
+      disabled={addScheduleDisabled}
+      onClick={onAdd}
+      className="gap-2 shadow-sm shadow-primary/20"
+    >
+      <Plus className="h-4 w-4" /> Добави час
+    </Button>
+  );
 
   const handleDelete = (entry: ScheduleEntry) => {
     toast.success(`"${entry.className}" беше изтрит от разписанието.`);
@@ -170,9 +223,23 @@ function AdminScheduleContent({
         title="Разписание"
         description="Управлявайте седмичното разписание на вашите студиа и абонаментите към тях."
         actions={
-          <Button onClick={onAdd} className="gap-2 shadow-sm shadow-primary/20">
-            <Plus className="h-4 w-4" /> Добави час
-          </Button>
+          <div className="flex max-w-md flex-col items-stretch gap-2 sm:items-end">
+            {addScheduleDisabled ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex justify-end">{addScheduleButton}</span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p>{addScheduleTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              addScheduleButton
+            )}
+            {addScheduleDisabled ? (
+              <p className="text-right text-xs leading-relaxed text-muted-foreground">{addScheduleHint}</p>
+            ) : null}
+          </div>
         }
       />
 
