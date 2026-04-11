@@ -1,8 +1,32 @@
+'use client';
+
 import { Globe, Mail, MapPin, Phone } from 'lucide-react';
+import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 import type { Studio } from '@/data/mock-data';
 import { StudioDetailFavoriteButton } from '@/components/studio-detail/studio-detail-favorite-button';
+import { useMemo } from 'react';
+
+function hasStudioCoords(studio: Studio) {
+  const { lat, lng } = studio;
+  if (lat == null || lng == null) return false;
+  if (lat === 0 && lng === 0) return false;
+  return true;
+}
 
 export function StudioDetailSidebar({ studio }: { studio: Studio }) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: apiKey,
+    // Keep in sync with StudioModal so one script load satisfies both.
+    libraries: ['places'],
+  });
+
+  const coords = useMemo(() => {
+    if (!hasStudioCoords(studio)) return null;
+    return { lat: studio.lat, lng: studio.lng };
+  }, [studio]);
+
   return (
     <aside className="space-y-6">
       <div className="rounded-2xl border border-border bg-card p-6">
@@ -33,8 +57,31 @@ export function StudioDetailSidebar({ studio }: { studio: Studio }) {
 
       <div className="rounded-2xl border border-border bg-card p-6">
         <h3 className="mb-3 font-display text-lg font-semibold text-foreground">Локация</h3>
-        <div className="flex aspect-square items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
-          {'\u{1F4CD}'} Картата изисква Google Maps API ключ
+        <div className="aspect-square overflow-hidden rounded-xl border border-border bg-muted/20">
+          {!apiKey ? (
+            <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
+              За да се визуализира карта, добавете `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+            </div>
+          ) : !coords ? (
+            <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
+              Локацията на картата още не е зададена за това студио.
+            </div>
+          ) : !isLoaded ? (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Зареждане на карта…</div>
+          ) : (
+            <GoogleMap
+              mapContainerStyle={{ width: '100%', height: '100%' }}
+              center={coords}
+              zoom={15}
+              options={{
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+              }}
+            >
+              <MarkerF position={coords} />
+            </GoogleMap>
+          )}
         </div>
       </div>
 
