@@ -324,7 +324,7 @@ const Navigation: React.FC = () => {
                 >
                   Вход
                 </Button>
-                <Button className={AUTH_PRIMARY_BUTTON_CLASS} onClick={() => router.push("/auth")}>
+                <Button className={AUTH_PRIMARY_BUTTON_CLASS} onClick={() => router.push("/auth?type=register")}>
                   Регистрация
                 </Button>
               </>
