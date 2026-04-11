@@ -441,11 +441,7 @@ const Navigation: React.FC = () => {
         )}
       </header>
 
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={setAuthModalOpen}
-        onSuccess={() => router.push("/favorites")}
-      />
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </>
   );
 };

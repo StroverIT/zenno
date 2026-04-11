@@ -14,7 +14,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (callbackUrl?: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -37,8 +37,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const loginWithGoogle = useCallback(async () => {
-    await signIn('google', { callbackUrl: '/' });
+  const loginWithGoogle = useCallback(async (callbackUrl?: string) => {
+    let url = callbackUrl;
+    if (!url && typeof window !== 'undefined') {
+      url = `${window.location.pathname}${window.location.search}`;
+    }
+    await signIn('google', { callbackUrl: url || '/' });
   }, []);
 
   const register = useCallback(

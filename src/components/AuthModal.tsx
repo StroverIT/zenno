@@ -20,7 +20,7 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('client');
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
 
   const reset = () => {
     setMode('choice');
@@ -57,11 +57,11 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
   };
 
   const handleGoogleLogin = async () => {
-    // Mock Google login
-    await login('google.user@gmail.com', 'google');
-    toast.success('Успешен вход с Google!');
-    handleClose(false);
-    onSuccess?.();
+    try {
+      await loginWithGoogle();
+    } catch {
+      toast.error('Грешка при вход с Google.');
+    }
   };
 
   return (
