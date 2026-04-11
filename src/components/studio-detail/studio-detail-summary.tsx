@@ -2,7 +2,7 @@ import { Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Studio } from '@/data/mock-data';
 
-const AMENITY_LABELS: Record<string, string> = {
+export const STUDIO_AMENITY_LABELS: Record<string, string> = {
   parking: '\u{1F17F}\uFE0F Паркинг',
   shower: '\u{1F6BF} Душ',
   changingRoom: '\u{1F454} Съблекалня',
@@ -28,7 +28,7 @@ export function StudioDetailSummary({ studio }: { studio: Studio }) {
           .filter(([, v]) => v)
           .map(([key]) => (
             <Badge key={key} variant="default" className="rounded-full px-3 py-1 text-sm">
-              {AMENITY_LABELS[key]}
+              {STUDIO_AMENITY_LABELS[key]}
             </Badge>
           ))}
       </div>
