@@ -25,7 +25,7 @@ export function StudioDetailFavoriteButton({ studioId }: { studioId: string }) {
 
   return (
     <>
-      <Button variant={fav ? 'default' : 'outline'} className="w-full" onClick={handleClick}>
+      <Button variant={fav ? 'default' : 'secondary'} className="w-full" onClick={handleClick}>
         <Heart className={`mr-2 h-4 w-4 ${fav ? 'fill-current' : ''}`} />
         {fav ? 'В любими' : 'Добави в любими'}
       </Button>

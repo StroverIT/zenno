@@ -19,7 +19,7 @@ export function ScheduleTabContent({
   return (
     <div className="space-y-6">
       {subscription?.hasMonthlySubscription && (
-        <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5">
+        <div className="rounded-xl border-2 border-primary bg-primary/5 p-5">
           <div className="flex items-start gap-4">
             <div className="shrink-0 rounded-xl bg-primary/10 p-2.5">
               <CreditCard className="h-6 w-6 text-primary" />
@@ -42,8 +42,8 @@ export function ScheduleTabContent({
           if (entries.length === 0) return null;
           return (
             <div key={day} className="overflow-hidden rounded-xl border border-border bg-card">
-              <div className="border-b border-border px-4 py-2.5 bg-secondary text-white">
-                <h4 className="text-sm font-semibold text-white">{day}</h4>
+              <div className="border-b border-border px-4 py-2.5 bg-primary/74 text-white">
+                <h4 className="text-sm font-bold text-white">{day}</h4>
               </div>
               <div className="divide-y divide-border">
                 {entries
