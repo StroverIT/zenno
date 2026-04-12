@@ -49,6 +49,7 @@ type UserProps = {
   isAuthenticated: boolean;
   checkoutModalOpen: boolean;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
+  bookedScheduleEntryIds: string[];
 };
 
 export type ScheduleContentProps = AdminProps | UserProps;
@@ -77,6 +78,7 @@ export function ScheduleContent(props: ScheduleContentProps) {
       isAuthenticated={props.isAuthenticated}
       checkoutModalOpen={props.checkoutModalOpen}
       onRequestScheduleBook={props.onRequestScheduleBook}
+      bookedScheduleEntryIds={props.bookedScheduleEntryIds}
     />
   );
 }
@@ -491,6 +493,7 @@ function UserScheduleContent({
   isAuthenticated,
   checkoutModalOpen,
   onRequestScheduleBook,
+  bookedScheduleEntryIds,
 }: {
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
@@ -498,6 +501,7 @@ function UserScheduleContent({
   isAuthenticated: boolean;
   checkoutModalOpen: boolean;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
+  bookedScheduleEntryIds: string[];
 }) {
   const scheduleByDay = buildScheduleByDay(studioSchedule);
 
@@ -521,34 +525,42 @@ function UserScheduleContent({
       <WeeklyScheduleList
         scheduleByDay={scheduleByDay}
         instructors={instructors}
-        renderTrailing={entry => (
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
-              <p className="text-xs text-muted-foreground">
-                {entry.enrolled}/{entry.maxCapacity} места
-              </p>
+        renderTrailing={entry => {
+          const alreadyBooked = isAuthenticated && bookedScheduleEntryIds.includes(entry.id);
+          const isFull = entry.enrolled >= entry.maxCapacity;
+          return (
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {entry.enrolled}/{entry.maxCapacity} места
+                </p>
+              </div>
+              <Button
+                size="sm"
+                className="rounded-lg shrink-0"
+                variant={alreadyBooked ? 'outline' : 'default'}
+                disabled={checkoutModalOpen || isFull || alreadyBooked}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    toast.error('Моля, влезте, за да се запишете.');
+                    return;
+                  }
+                  if (alreadyBooked) {
+                    return;
+                  }
+                  if (isFull) {
+                    toast.info('Този час е пълен.');
+                    return;
+                  }
+                  onRequestScheduleBook(entry);
+                }}
+              >
+                {alreadyBooked ? 'Вече сте записани' : isFull ? 'Пълен' : 'Запиши се'}
+              </Button>
             </div>
-            <Button
-              size="sm"
-              className="rounded-lg shrink-0"
-              disabled={checkoutModalOpen || entry.enrolled >= entry.maxCapacity}
-              onClick={() => {
-                if (!isAuthenticated) {
-                  toast.error('Моля, влезте, за да се запишете.');
-                  return;
-                }
-                if (entry.enrolled >= entry.maxCapacity) {
-                  toast.info('Този час е пълен.');
-                  return;
-                }
-                onRequestScheduleBook(entry);
-              }}
-            >
-              {entry.enrolled >= entry.maxCapacity ? 'Пълен' : 'Запиши се'}
-            </Button>
-          </div>
-        )}
+          );
+        }}
         emptyState={{
           title: 'Няма добавено разписание за това студио.',
         }}

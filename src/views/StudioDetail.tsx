@@ -30,6 +30,7 @@ type StudioPayload = {
   schedule: ScheduleEntry[];
   subscription: StudioSubscription | null;
   reviews: Review[];
+  myBookings?: { classIds: string[]; scheduleEntryIds: string[] };
 };
 
 const StudioDetail = () => {
@@ -76,7 +77,7 @@ const StudioDetail = () => {
     return () => {
       cancelled = true;
     };
-  }, [id, fetchStudioPayload]);
+  }, [id, fetchStudioPayload, isAuthenticated]);
 
   const handleReviewSubmitted = useCallback(() => {
     void fetchStudioPayload().then((data) => setPayload(data));
@@ -92,10 +93,15 @@ const StudioDetail = () => {
 
   const { studio, instructors, classes, schedule, subscription, reviews } = payload;
   const studioReviews = reviews.filter((r) => r.targetId === studio.id && r.targetType === 'studio');
+  const bookedClassIds = payload.myBookings?.classIds ?? [];
+  const bookedScheduleEntryIds = payload.myBookings?.scheduleEntryIds ?? [];
 
   const handleRequestClassBook = (classId: string) => {
     if (!isAuthenticated) {
       toast.error('Моля, влезте в акаунта си, за да се запишете.');
+      return;
+    }
+    if (bookedClassIds.includes(classId)) {
       return;
     }
     const cls = classes.find((c) => c.id === classId);
@@ -110,6 +116,9 @@ const StudioDetail = () => {
   const handleRequestScheduleBook = (entry: ScheduleEntry) => {
     if (!isAuthenticated) {
       toast.error('Моля, влезте в акаунта си, за да се запишете.');
+      return;
+    }
+    if (bookedScheduleEntryIds.includes(entry.id)) {
       return;
     }
     if (entry.studioId !== studio.id) return;
@@ -158,6 +167,8 @@ const StudioDetail = () => {
             onReviewSubmitted={handleReviewSubmitted}
             defaultTab={defaultTab}
             checkoutModalOpen={checkoutTarget !== null}
+            bookedClassIds={bookedClassIds}
+            bookedScheduleEntryIds={bookedScheduleEntryIds}
           />
         </div>
 

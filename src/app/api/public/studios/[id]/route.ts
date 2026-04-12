@@ -8,7 +8,7 @@ import {
   subscriptionToDto,
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
-import { jsonError } from '@/lib/api-auth';
+import { getSessionUser, jsonError } from '@/lib/api-auth';
 export const runtime = 'nodejs';
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -35,6 +35,25 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     include: { author: { select: { image: true, name: true } } },
   });
 
+  const sessionUser = await getSessionUser();
+  let myBookings: { classIds: string[]; scheduleEntryIds: string[] } = { classIds: [], scheduleEntryIds: [] };
+  if (sessionUser?.id) {
+    const [classRows, scheduleRows] = await Promise.all([
+      prisma.booking.findMany({
+        where: { userId: sessionUser.id, yogaClass: { studioId: studio.id } },
+        select: { yogaClassId: true },
+      }),
+      prisma.scheduleEntryBooking.findMany({
+        where: { userId: sessionUser.id, scheduleEntry: { studioId: studio.id } },
+        select: { scheduleEntryId: true },
+      }),
+    ]);
+    myBookings = {
+      classIds: classRows.map((r) => r.yogaClassId),
+      scheduleEntryIds: scheduleRows.map((r) => r.scheduleEntryId),
+    };
+  }
+
   return NextResponse.json({
     studio: studioToDto(studio),
     instructors: studio.instructors.map(instructorToDto),
@@ -42,5 +61,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     schedule: studio.schedule.map(scheduleEntryToDto),
     subscription: studio.subscription ? subscriptionToDto(studio.subscription) : null,
     reviews: studioReviews.map(reviewToDto),
+    myBookings,
   });
 }

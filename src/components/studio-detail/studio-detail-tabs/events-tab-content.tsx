@@ -10,11 +10,15 @@ export function EventsTabContent({
   instructors,
   checkoutModalOpen,
   onBookClass,
+  isAuthenticated,
+  bookedClassIds,
 }: {
   studioClasses: YogaClass[];
   instructors: Instructor[];
   checkoutModalOpen: boolean;
   onBookClass: (classId: string) => void;
+  isAuthenticated: boolean;
+  bookedClassIds: string[];
 }) {
   return (
     <div className="space-y-4">
@@ -29,6 +33,7 @@ export function EventsTabContent({
         const instructor = instructors.find((i) => i.id === cls.instructorId);
         const isFull = cls.enrolled >= cls.maxCapacity;
         const bookingInFlight = checkoutModalOpen;
+        const alreadyBooked = isAuthenticated && bookedClassIds.includes(cls.id);
         return (
           <div
             key={cls.id}
@@ -56,10 +61,14 @@ export function EventsTabContent({
               <span className="text-xl font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(cls.price)}</span>
               <Button
                 onClick={() => onBookClass(cls.id)}
-                variant={isFull ? 'outline' : 'default'}
-                disabled={bookingInFlight}
+                variant={alreadyBooked || isFull ? 'outline' : 'default'}
+                disabled={bookingInFlight || alreadyBooked}
               >
-                {isFull ? 'Списък за изчакване' : 'Запиши се'}
+                {alreadyBooked
+                  ? 'Вече сте записани'
+                  : isFull
+                    ? 'Списък за изчакване'
+                    : 'Запиши се'}
               </Button>
             </div>
           </div>
