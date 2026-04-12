@@ -46,7 +46,7 @@ export function formatMonthlyDualFromBgn(bgnMonthly: number): string {
   return `${formatPriceDualFromBgn(bgnMonthly)}/мес.`;
 }
 
-/** Prefill EUR field from stored BGN (class / schedule integer prices). */
+/** Prefill EUR field from stored BGN (class / schedule list prices). */
 export function formatEurInputFromBgn(bgn: number): string {
   if (!Number.isFinite(bgn)) return '';
   const eur = roundMoney(bgnToEur(bgn), 2);
@@ -59,9 +59,9 @@ export function parseEurInput(raw: string): number {
   return Number.isFinite(n) ? n : NaN;
 }
 
-/** Persisted class/schedule price (BGN, integer) from EUR input. */
+/** Persisted class/schedule list price in BGN from EUR input (2 dp; avoids EUR round-trip drift from whole BGN). */
 export function classPriceBgnFromEur(eur: number): number {
-  return Math.max(0, Math.round(eurToBgn(eur)));
+  return subscriptionPriceBgnFromEur(eur);
 }
 
 /** Subscription / float BGN from EUR. */

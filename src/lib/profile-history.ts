@@ -20,7 +20,7 @@ export type ProfileConfirmedReservation = {
   studioName: string;
   /** YogaClass id when source is "class"; omitted for schedule rows. */
   yogaClassId?: string;
-  /** List/catalog price in BGN (same unit as YogaClass.price / ScheduleEntry.price). */
+  /** List/catalog price in BGN (same unit as YogaClass.price / ScheduleEntry.price; decimal BGN). */
   priceBgn: number;
   amountMinor: number;
   currency: string;

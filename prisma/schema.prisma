@@ -174,7 +174,7 @@ model YogaClass {
   endTime             String
   maxCapacity         Int
   enrolled            Int      @default(0)
-  price               Int
+  price               Float
   yogaType            String
   difficulty          String
   cancellationPolicy  String
@@ -231,7 +231,7 @@ model ScheduleEntry {
   endTime     String
   maxCapacity Int
   enrolled    Int      @default(0)
-  price       Int
+  price       Float
   isRecurring Boolean  @default(true)
 
   bookings ScheduleEntryBooking[]
