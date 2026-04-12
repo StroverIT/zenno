@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import type { Instructor, Studio, StudioSubscription, SubscriptionRequestDto, YogaClass } from '@/data/mock-data';
+import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
 import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateNetPayout, calculatePayoutFee, PAYOUT_MINIMUM_AMOUNT } from '@/lib/payments';
@@ -17,7 +18,7 @@ export function OverviewSection({
   myStudios,
   myClasses,
   myInstructors,
-  revenue,
+  bookingRevenue,
   subscriptions,
   subscriptionRequests,
   recentSignups,
@@ -29,43 +30,37 @@ export function OverviewSection({
   myStudios: Studio[];
   myClasses: YogaClass[];
   myInstructors: Instructor[];
-  revenue: number;
+  bookingRevenue: DashboardBookingRevenue;
   subscriptions: StudioSubscription[];
   subscriptionRequests: SubscriptionRequestDto[];
   recentSignups: DashboardRecentSignup[];
 }) {
-  const classRevenue = myClasses.reduce((sum, cls) => sum + cls.enrolled * cls.price, 0);
+  const eventsAndScheduleBgn = bookingRevenue.totalBgn;
+  const classBookingsBgn = bookingRevenue.fromClassBookingsBgn;
+  const scheduleBookingsBgn = bookingRevenue.fromScheduleBookingsBgn;
   const subscriptionRevenue = subscriptions
     .filter((sub) => sub.hasMonthlySubscription)
     .reduce((sum, sub) => sum + (sub.monthlyPrice ?? 0), 0);
   const pendingSubscriptionRequests = subscriptionRequests.filter((req) => req.status === 'PENDING').length;
-  const grossRevenue = classRevenue + subscriptionRevenue;
+  const grossRevenue = eventsAndScheduleBgn;
   const payoutFee = calculatePayoutFee(grossRevenue);
   const netPayout = calculateNetPayout(grossRevenue);
   const canRequestPayout = grossRevenue >= PAYOUT_MINIMUM_AMOUNT;
   const perStudioRevenue = myStudios.map((studio) => {
-    const classesRevenueForStudio = myClasses
-      .filter((cls) => cls.studioId === studio.id)
-      .reduce((sum, cls) => sum + cls.enrolled * cls.price, 0);
+    const split = bookingRevenue.perStudio[studio.id] ?? { classBookingsBgn: 0, scheduleBookingsBgn: 0 };
+    const bookingTotalForStudio = split.classBookingsBgn + split.scheduleBookingsBgn;
     const monthlySubscriptionRevenue =
       subscriptions.find((sub) => sub.studioId === studio.id && sub.hasMonthlySubscription)?.monthlyPrice ?? 0;
     return {
       studioId: studio.id,
       studioName: studio.name,
-      classesRevenueForStudio,
+      classBookingsBgn: split.classBookingsBgn,
+      scheduleBookingsBgn: split.scheduleBookingsBgn,
       monthlySubscriptionRevenue,
-      total: classesRevenueForStudio + monthlySubscriptionRevenue,
+      total: bookingTotalForStudio + monthlySubscriptionRevenue,
     };
   });
-  const salesHistory = [...myClasses]
-    .sort((a, b) => `${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`))
-    .map((cls) => ({
-      id: cls.id,
-      name: cls.name,
-      date: cls.date,
-      gross: cls.enrolled * cls.price,
-      enrolled: cls.enrolled,
-    }));
+  const salesHistory = bookingRevenue.classEventsSales;
 
   return (
     <div className="space-y-8">
@@ -101,8 +96,8 @@ export function OverviewSection({
           {
             icon: BarChart3,
             label: 'Приход',
-            value: formatPriceDualFromBgn(revenue),
-            sub: 'от записвания',
+            value: formatPriceDualFromBgn(eventsAndScheduleBgn),
+            sub: 'събития и разписание',
             iconWrap: 'bg-muted text-yoga-secondary-deep',
           },
         ].map((card, i) => (
@@ -235,7 +230,9 @@ export function OverviewSection({
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="font-display font-semibold text-foreground">Финанси</h3>
-            <p className="mt-0.5 text-sm text-muted-foreground">Приходи, източници и теглене към банкова сметка</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Приходи от реални записвания (събития и разписание), източници и теглене към банкова сметка
+            </p>
           </div>
           <Badge variant={canRequestPayout ? 'default' : 'secondary'}>
             {canRequestPayout
@@ -262,11 +259,15 @@ export function OverviewSection({
             <p className="mb-3 text-sm font-semibold text-foreground">Източници на приход</p>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Записвания</span>
-                <span className="font-medium text-foreground">{formatPriceDualFromBgn(classRevenue)}</span>
+                <span className="text-muted-foreground">Събития (класове)</span>
+                <span className="font-medium text-foreground">{formatPriceDualFromBgn(classBookingsBgn)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Абонаменти</span>
+                <span className="text-muted-foreground">Разписание</span>
+                <span className="font-medium text-foreground">{formatPriceDualFromBgn(scheduleBookingsBgn)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Абонаменти (настройка)</span>
                 <span className="font-medium text-foreground">{formatPriceDualFromBgn(subscriptionRevenue)}</span>
               </div>
               <div className="flex items-center justify-between">
@@ -297,7 +298,7 @@ export function OverviewSection({
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-foreground">{formatPriceDualFromBgn(sale.gross)}</p>
-                      <p className="text-muted-foreground">{sale.enrolled} записвания</p>
+                      <p className="text-muted-foreground">{sale.bookingCount} записвания</p>
                     </div>
                   </div>
                 ))

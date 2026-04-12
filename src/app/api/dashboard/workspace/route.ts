@@ -9,6 +9,7 @@ import {
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
+import { emptyDashboardBookingRevenue, getDashboardBookingRevenueSummary } from '@/lib/dashboard-booking-revenue';
 import { getDashboardRecentSignups } from '@/lib/dashboard-recent-signups';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
@@ -29,11 +30,21 @@ export async function GET() {
       subscriptions: [],
       subscriptionRequests: [],
       recentSignups: [],
+      bookingRevenue: emptyDashboardBookingRevenue,
       onlinePayments: isOnlinePaymentsEnabled(),
     });
   }
 
-  const [studios, instructors, classes, schedule, subscriptions, subscriptionRequests, recentSignups] = await Promise.all([
+  const [
+    studios,
+    instructors,
+    classes,
+    schedule,
+    subscriptions,
+    subscriptionRequests,
+    recentSignups,
+    bookingRevenue,
+  ] = await Promise.all([
     prisma.studio.findMany({
       where: { id: { in: studioIds } },
       orderBy: { createdAt: 'desc' },
@@ -59,6 +70,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     }),
     getDashboardRecentSignups(studioIds, 20),
+    getDashboardBookingRevenueSummary(studioIds),
   ]);
 
   return NextResponse.json({
@@ -69,6 +81,7 @@ export async function GET() {
     subscriptions: subscriptions.map(subscriptionToDto),
     subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
     recentSignups,
+    bookingRevenue,
     onlinePayments: isOnlinePaymentsEnabled(),
   });
 }

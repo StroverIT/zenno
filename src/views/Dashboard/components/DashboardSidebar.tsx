@@ -70,7 +70,7 @@ export function DashboardSidebar({
           <span className="text-xs font-semibold text-foreground">Бърз преглед</span>
         </div>
         <p className="text-2xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(revenue)}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">Приход от записвания</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Приход от събития и разписание</p>
       </div>
     </aside>
   );

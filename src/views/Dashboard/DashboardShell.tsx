@@ -14,7 +14,6 @@ import {
   DashboardSetupGuideMobileDock,
   DashboardSetupGuideSidebarNav,
 } from './components/DashboardSetupGuide';
-import { deriveDashboardMetrics } from './dashboardMockData';
 
 function DashboardShellInner({
   children,
@@ -26,7 +25,7 @@ function DashboardShellInner({
   const pathname = usePathname();
   const { user } = useAuth();
   const ws = useDashboardWorkspaceContext();
-  const { revenue } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
+  const eventsAndScheduleIncomeBgn = ws.bookingRevenue.totalBgn;
   const activeSection = getActiveSection(pathname);
   const displayName = user?.name?.trim() || serverDisplayName || 'Бизнес потребител';
 
@@ -80,7 +79,7 @@ function DashboardShellInner({
       <DashboardSidebar
         displayName={displayName}
         activeSection={activeSection}
-        revenue={revenue}
+        revenue={eventsAndScheduleIncomeBgn}
         setupGuide={setupGuideSidebar}
         setupSectionHints={setupSectionHints}
       />

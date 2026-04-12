@@ -14,7 +14,6 @@ export default function DashboardOverviewPage() {
     myStudios,
     myClasses,
     myInstructors,
-    revenue,
   } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
 
   if (ws.loading) {
@@ -33,7 +32,7 @@ export default function DashboardOverviewPage() {
       myStudios={myStudios}
       myClasses={myClasses}
       myInstructors={myInstructors}
-      revenue={revenue}
+      bookingRevenue={ws.bookingRevenue}
       subscriptions={ws.subscriptions}
       subscriptionRequests={ws.subscriptionRequests}
       recentSignups={ws.recentSignups}

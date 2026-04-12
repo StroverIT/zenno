@@ -9,6 +9,8 @@ import type {
   SubscriptionRequestDto,
   YogaClass,
 } from '@/data/mock-data';
+import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
+import { emptyDashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
 import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
 import { parseOnlinePaymentsFlag } from '@/lib/payment-settings';
 
@@ -20,6 +22,7 @@ type WorkspacePayload = {
   subscriptions: StudioSubscription[];
   subscriptionRequests: SubscriptionRequestDto[];
   recentSignups: DashboardRecentSignup[];
+  bookingRevenue: DashboardBookingRevenue;
   onlinePayments?: boolean;
 };
 
@@ -46,12 +49,13 @@ export function useDashboardWorkspace() {
         return;
       }
       const json = (await workspaceRes.json()) as WorkspacePayload;
+      const bookingRevenue = json.bookingRevenue ?? emptyDashboardBookingRevenue;
       let onlinePayments = parseOnlinePaymentsFlag(json.onlinePayments);
       if (settingsRes.ok) {
         const s = (await settingsRes.json().catch(() => ({}))) as { onlinePayments?: unknown };
         onlinePayments = parseOnlinePaymentsFlag(s.onlinePayments);
       }
-      setData({ ...json, onlinePayments });
+      setData({ ...json, bookingRevenue, onlinePayments });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
       setData(null);
@@ -72,6 +76,7 @@ export function useDashboardWorkspace() {
     subscriptions: data?.subscriptions ?? [],
     subscriptionRequests: data?.subscriptionRequests ?? [],
     recentSignups: data?.recentSignups ?? [],
+    bookingRevenue: data?.bookingRevenue ?? emptyDashboardBookingRevenue,
     onlinePayments: data?.onlinePayments ?? true,
     loading,
     error,
