@@ -10,6 +10,7 @@ import {
 } from '@/lib/public-studio-dto';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
 import { getDashboardRecentSignups } from '@/lib/dashboard-recent-signups';
+import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
 export const runtime = 'nodejs';
 
@@ -28,6 +29,7 @@ export async function GET() {
       subscriptions: [],
       subscriptionRequests: [],
       recentSignups: [],
+      onlinePayments: isOnlinePaymentsEnabled(),
     });
   }
 
@@ -67,5 +69,6 @@ export async function GET() {
     subscriptions: subscriptions.map(subscriptionToDto),
     subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
     recentSignups,
+    onlinePayments: isOnlinePaymentsEnabled(),
   });
 }

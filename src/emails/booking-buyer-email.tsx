@@ -6,9 +6,18 @@ export type BookingBuyerEmailProps = {
   lines: string[];
   calendarUrl?: string;
   paymentMode: 'online' | 'offline';
+  /** Single formatted end price (EUR · BGN); no fee/tax breakdown for online. */
+  endPriceDual?: string | null;
 };
 
-export function BookingBuyerEmail({ preview, headline, lines, calendarUrl, paymentMode }: BookingBuyerEmailProps) {
+export function BookingBuyerEmail({
+  preview,
+  headline,
+  lines,
+  calendarUrl,
+  paymentMode,
+  endPriceDual,
+}: BookingBuyerEmailProps) {
   return (
     <Html>
       <Head />
@@ -22,9 +31,15 @@ export function BookingBuyerEmail({ preview, headline, lines, calendarUrl, payme
                 {line}
               </Text>
             ))}
-            {paymentMode === 'offline' ? (
+            {endPriceDual ? (
+              <Text style={{ fontSize: '14px', color: '#111', marginTop: '12px' }}>
+                Крайна сума
+                {paymentMode === 'offline' ? ' (плащане на място в студиото)' : ' (платено онлайн)'}:{' '}
+                <strong>{endPriceDual}</strong>
+              </Text>
+            ) : paymentMode === 'offline' ? (
               <Text style={{ fontSize: '14px', color: '#444', marginTop: '12px' }}>
-                Плащането се урежда директно със студиото (без онлайн такса).
+                Плащането се извършва <strong>на място</strong> в студиото. Уточнете сумата директно със студиото.
               </Text>
             ) : null}
             {calendarUrl ? (

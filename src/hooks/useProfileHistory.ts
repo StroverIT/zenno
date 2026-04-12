@@ -11,6 +11,8 @@ export function useProfileHistory() {
   return useQuery({
     queryKey: ['profile', 'history'],
     queryFn: fetchProfileHistory,
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }

@@ -4,11 +4,11 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { ProfileHistoryTab } from '@/components/profile/profile-history-tab';
 import { ProfileClassDetailDialog } from '@/components/profile/profile-class-detail-dialog';
-import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
-import { calculateFinalCustomerAmount } from '@/lib/payments';
+import { bgnFromStripeEurTotalMinor, formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { useProfileHistory } from '@/hooks/useProfileHistory';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import type { AttendedClass } from '@/components/profile/profile-mock-data';
 
 type SpendingRow = {
   id: string;
@@ -46,39 +46,66 @@ export default function ProfileHistoryPage() {
     return data?.studios.find((s) => s.id === selected.studioId);
   }, [data?.studios, selected]);
 
-  const attendedDate = useMemo(() => {
-    if (!selectedClass || !data) return null;
-    return data.attendedClasses.find((a) => a.classId === selectedClass)?.attendedDate ?? null;
+  const { attendedDate, bookedDate } = useMemo(() => {
+    if (!selectedClass || !data) {
+      return { attendedDate: null as string | null, bookedDate: null as string | null };
+    }
+    const att = data.attendedClasses.find((a) => a.classId === selectedClass);
+    if (att) return { attendedDate: att.attendedDate, bookedDate: null };
+    const booking = data.confirmedReservations.find(
+      (r) => r.source === 'class' && r.yogaClassId === selectedClass,
+    );
+    return {
+      attendedDate: null,
+      bookedDate: booking ? booking.bookedAt.slice(0, 10) : null,
+    };
   }, [data, selectedClass]);
+
+  /** Attendances plus booked yoga events that are not yet marked as attended. */
+  const eventRowsForTab = useMemo((): AttendedClass[] => {
+    if (!data) return [];
+    const attendedByClassId = new Map(data.attendedClasses.map((a) => [a.classId, a]));
+    const fromBookingsOnly: AttendedClass[] = [];
+    for (const row of data.confirmedReservations) {
+      if (row.source !== 'class' || !row.yogaClassId) continue;
+      if (attendedByClassId.has(row.yogaClassId)) continue;
+      const cls = data.classes.find((c) => c.id === row.yogaClassId);
+      fromBookingsOnly.push({
+        classId: row.yogaClassId,
+        attendedDate: cls?.date ?? row.bookedAt.slice(0, 10),
+      });
+    }
+    const combined = [...data.attendedClasses, ...fromBookingsOnly];
+    combined.sort((a, b) => (a.attendedDate < b.attendedDate ? 1 : -1));
+    return combined;
+  }, [data]);
 
   const spendingHistory = useMemo((): SpendingRow[] => {
     if (!data) return [];
-    const classById = new Map(data.classes.map((c) => [c.id, c]));
-    const studioById = new Map(data.studios.map((s) => [s.id, s]));
-    return data.attendedClasses
-      .map((attended) => {
-        const cls = classById.get(attended.classId);
-        if (!cls) return null;
-        const studio = studioById.get(cls.studioId);
-        const finalPaid = calculateFinalCustomerAmount(cls.price);
+    return data.confirmedReservations
+      .map((row) => {
+        const finalPaid =
+          row.paymentOrigin === 'offline'
+            ? row.priceBgn
+            : row.amountMinor > 0 && (row.currency === 'eur' || !row.currency)
+              ? bgnFromStripeEurTotalMinor(row.amountMinor)
+              : row.priceBgn;
         return {
-          id: attended.classId + attended.attendedDate,
-          date: attended.attendedDate,
-          reason: `Клас: ${cls.name}`,
-          studioName: studio?.name ?? 'Неизвестно студио',
-          baseAmount: cls.price,
+          id: row.id,
+          date: row.bookedAt.slice(0, 10),
+          reason: row.source === 'schedule' ? `Разписание: ${row.title}` : `Клас: ${row.title}`,
+          studioName: row.studioName,
+          baseAmount: row.priceBgn,
           finalPaid,
         };
       })
-      .filter(Boolean)
-      .sort((a, b) => (a!.date > b!.date ? -1 : 1)) as SpendingRow[];
+      .sort((a, b) => (a.date > b.date ? -1 : 1));
   }, [data]);
 
   const totalSpent = spendingHistory.reduce((sum, row) => sum + row.finalPaid, 0);
   const activeSubscriptions = data?.activeSubscriptions ?? [];
-  const attendedClasses = data?.attendedClasses ?? [];
   const confirmedReservations = data?.confirmedReservations ?? [];
-  const totalClasses = attendedClasses.length;
+  const totalEventRows = data ? eventRowsForTab.length : 0;
 
   if (isPending) {
     return (
@@ -134,13 +161,16 @@ export default function ProfileHistoryPage() {
                   </p>
                 </div>
                 <div className="shrink-0 text-right text-xs sm:text-sm">
-                  {row.paymentOrigin === 'offline' ? (
-                    <p className="font-medium text-foreground leading-snug">Записване (без онлайн плащане)</p>
-                  ) : (
-                    <p className="font-semibold text-foreground leading-snug">
-                      {formatPriceDualFromBgn(row.amountMinor / 100)}
-                    </p>
-                  )}
+                  <p className="font-semibold text-foreground leading-snug">
+                    {formatPriceDualFromBgn(
+                      row.paymentOrigin === 'offline'
+                        ? row.priceBgn
+                        : row.amountMinor > 0 && (row.currency === 'eur' || !row.currency)
+                          ? bgnFromStripeEurTotalMinor(row.amountMinor)
+                          : row.priceBgn,
+                    )}
+                  </p>
+
                   <p className="text-muted-foreground">
                     {new Date(row.bookedAt).toLocaleString('bg-BG')}
                   </p>
@@ -153,7 +183,9 @@ export default function ProfileHistoryPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-display text-lg font-semibold text-foreground">Моите разходи</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Всичко платено по посещения, с включени онлайн такси.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Суми по потвърдени резервации — събития и разписание; при онлайн плащане са с включени такси в приложението.
+          </p>
           <p className="mt-4 text-3xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(totalSpent)}</p>
           <div className="mt-4 space-y-2">
             {spendingHistory.length === 0 ? (
@@ -196,8 +228,8 @@ export default function ProfileHistoryPage() {
         </div>
       </div>
       <ProfileHistoryTab
-        attendedClasses={attendedClasses}
-        totalClasses={totalClasses}
+        attendedClasses={eventRowsForTab}
+        totalClasses={totalEventRows}
         classes={data.classes}
         instructors={data.instructors}
         studios={data.studios}
@@ -211,6 +243,7 @@ export default function ProfileHistoryPage() {
         selectedInstructor={selectedInstructor}
         selectedStudio={selectedStudio}
         attendedDate={attendedDate}
+        bookedDate={bookedDate}
       />
     </>
   );

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 
@@ -93,20 +92,18 @@ export async function POST(request: Request) {
     },
   });
 
-  if (isOnlinePaymentsEnabled()) {
-    try {
-      await ensureStripeCatalogEntry({
-        name: `Class: ${created.name}`,
-        baseAmount: created.price,
-        metadata: {
-          type: 'class',
-          classId: created.id,
-          studioId: created.studioId,
-        },
-      });
-    } catch (error) {
-      console.error('Stripe catalog sync failed for class', created.id, error);
-    }
+  try {
+    await ensureStripeCatalogEntry({
+      name: `Class: ${created.name}`,
+      baseAmount: created.price,
+      metadata: {
+        type: 'class',
+        classId: created.id,
+        studioId: created.studioId,
+      },
+    });
+  } catch (error) {
+    console.error('Stripe catalog sync failed for class', created.id, error);
   }
 
   return NextResponse.json({ class: yogaClassToDto(created) }, { status: 201 });

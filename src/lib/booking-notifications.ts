@@ -1,4 +1,3 @@
-import { after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendBookingConfirmationEmails, type ClassEmailDetail, type ScheduleEmailDetail } from '@/lib/booking-email';
 
@@ -13,55 +12,56 @@ export type BookingNotificationPayload = {
   scheduleDetail?: ScheduleEmailDetail;
 };
 
+/** Creates RecentEnrollment + sends confirmation emails. Swallows errors so Stripe/booking APIs are not failed by mail issues. */
 export async function runBookingNotifications(payload: BookingNotificationPayload): Promise<void> {
-  const [studio, buyer] = await Promise.all([
-    prisma.studio.findUnique({
-      where: { id: payload.studioId },
-      include: { business: { include: { owner: { select: { email: true, name: true } } } } },
-    }),
-    prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { email: true, name: true },
-    }),
-  ]);
-  if (!studio) return;
+  try {
+    const [studio, buyer] = await Promise.all([
+      prisma.studio.findUnique({
+        where: { id: payload.studioId },
+        select: {
+          name: true,
+          address: true,
+          email: true,
+          business: { select: { owner: { select: { email: true, name: true } } } },
+        },
+      }),
+      prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { email: true, name: true },
+      }),
+    ]);
+    if (!studio) return;
 
-  const displayName = buyer?.name?.trim() || buyer?.email?.trim() || 'Клиент';
-  const title =
-    payload.kind === 'class' && payload.classDetail
-      ? payload.classDetail.name
-      : payload.scheduleDetail?.className ?? 'Резервация';
+    const displayName = buyer?.name?.trim() || buyer?.email?.trim() || 'Клиент';
+    const title =
+      payload.kind === 'class' && payload.classDetail
+        ? payload.classDetail.name
+        : payload.scheduleDetail?.className ?? 'Резервация';
 
-  await prisma.recentEnrollment.create({
-    data: {
-      userDisplayName: displayName,
-      className: title,
+    await prisma.recentEnrollment.create({
+      data: {
+        userDisplayName: displayName,
+        className: title,
+        studioName: studio.name,
+        enrolledAt: new Date(),
+      },
+    });
+
+    await sendBookingConfirmationEmails({
+      kind: payload.kind,
+      paymentMode: payload.paymentMode,
+      buyerEmail: buyer?.email,
+      buyerName: buyer?.name,
+      studioEmail: studio.email,
+      ownerEmail: studio.business.owner?.email,
       studioName: studio.name,
-      enrolledAt: new Date(),
-    },
-  });
-
-  await sendBookingConfirmationEmails({
-    kind: payload.kind,
-    paymentMode: payload.paymentMode,
-    buyerEmail: buyer?.email,
-    buyerName: buyer?.name,
-    ownerEmail: studio.business.owner?.email,
-    studioName: studio.name,
-    studioAddress: studio.address,
-    amountMinor: payload.amountMinor,
-    currency: payload.currency,
-    classDetail: payload.classDetail,
-    scheduleDetail: payload.scheduleDetail,
-  });
-}
-
-export function queueBookingNotifications(payload: BookingNotificationPayload): void {
-  after(async () => {
-    try {
-      await runBookingNotifications(payload);
-    } catch (err) {
-      console.error('[booking-notifications] failed', err);
-    }
-  });
+      studioAddress: studio.address,
+      amountMinor: payload.amountMinor,
+      currency: payload.currency,
+      classDetail: payload.classDetail,
+      scheduleDetail: payload.scheduleDetail,
+    });
+  } catch (err) {
+    console.error('[booking-notifications] failed (e.g. email or RecentEnrollment)', err);
+  }
 }

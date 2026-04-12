@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { jsonError, requireSession } from '@/lib/api-auth';
-import { queueBookingNotifications } from '@/lib/booking-notifications';
+import { runBookingNotifications } from '@/lib/booking-notifications';
 import { enrollUserInScheduleOffline } from '@/lib/offline-booking';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       scheduleEntryId,
       studioId,
     );
-    queueBookingNotifications({
+    await runBookingNotifications({
       kind: 'schedule',
       paymentMode: 'offline',
       userId: gate.user.id,
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
         day: scheduleDetail.day,
         startTime: scheduleDetail.startTime,
         endTime: scheduleDetail.endTime,
+        basePriceBgn: scheduleDetail.basePriceBgn,
       },
     });
   } catch (err) {

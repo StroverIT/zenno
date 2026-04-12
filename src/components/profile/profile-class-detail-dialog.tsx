@@ -15,6 +15,8 @@ interface ProfileClassDetailDialogProps {
   selectedInstructor: Instructor | undefined;
   selectedStudio: Studio | undefined;
   attendedDate: string | null | undefined;
+  /** Shown when there is a booking but no attendance record yet. */
+  bookedDate?: string | null;
 }
 
 export const ProfileClassDetailDialog = ({
@@ -24,6 +26,7 @@ export const ProfileClassDetailDialog = ({
   selectedInstructor,
   selectedStudio,
   attendedDate,
+  bookedDate,
 }: ProfileClassDetailDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-w-lg p-0 overflow-hidden">
@@ -33,7 +36,11 @@ export const ProfileClassDetailDialog = ({
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">{selected.name}</DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {attendedDate && `Посетен на ${formatDate(attendedDate)}`}
+                {attendedDate
+                  ? `Посетен на ${formatDate(attendedDate)}`
+                  : bookedDate
+                    ? `Записан на ${formatDate(bookedDate)}`
+                    : null}
               </p>
             </DialogHeader>
           </div>

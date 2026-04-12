@@ -18,6 +18,10 @@ export type ProfileConfirmedReservation = {
   subtitle: string;
   studioId: string;
   studioName: string;
+  /** YogaClass id when source is "class"; omitted for schedule rows. */
+  yogaClassId?: string;
+  /** List/catalog price in BGN (same unit as YogaClass.price / ScheduleEntry.price). */
+  priceBgn: number;
   amountMinor: number;
   currency: string;
 };
@@ -133,6 +137,8 @@ export async function getProfileHistoryPayload(userId: string): Promise<ProfileH
       subtitle: `${c.date.toISOString().slice(0, 10)} · ${c.startTime}–${c.endTime}`,
       studioId: c.studio.id,
       studioName: c.studio.name,
+      yogaClassId: c.id,
+      priceBgn: c.price,
       amountMinor: b.payment?.amount ?? 0,
       currency: b.payment?.currency ?? 'eur',
     });
@@ -151,6 +157,7 @@ export async function getProfileHistoryPayload(userId: string): Promise<ProfileH
       subtitle: `${e.day} · ${e.startTime}–${e.endTime} (разписание)`,
       studioId: e.studio.id,
       studioName: e.studio.name,
+      priceBgn: e.price,
       amountMinor: b.payment?.amount ?? 0,
       currency: b.payment?.currency ?? 'eur',
     });
@@ -170,6 +177,8 @@ export async function getProfileHistoryPayload(userId: string): Promise<ProfileH
       subtitle: `${c.date.toISOString().slice(0, 10)} · ${c.startTime}–${c.endTime}`,
       studioId: c.studio.id,
       studioName: c.studio.name,
+      yogaClassId: c.id,
+      priceBgn: c.price,
       amountMinor: 0,
       currency: 'eur',
     });
@@ -187,6 +196,7 @@ export async function getProfileHistoryPayload(userId: string): Promise<ProfileH
       subtitle: `${e.day} · ${e.startTime}–${e.endTime} (разписание)`,
       studioId: e.studio.id,
       studioName: e.studio.name,
+      priceBgn: e.price,
       amountMinor: 0,
       currency: 'eur',
     });

@@ -24,14 +24,14 @@ export const ProfileHistoryTab = ({
 }: ProfileHistoryTabProps) => (
   <div className="space-y-4">
     <div className="flex items-center justify-between mb-2">
-      <p className="text-sm text-muted-foreground">{totalClasses} посетени класа</p>
+      <p className="text-sm text-muted-foreground">{totalClasses} събития (записани и посетени)</p>
     </div>
 
     {attendedClasses.length === 0 ? (
       <div className="text-center py-16">
         <Calendar className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-        <h3 className="font-display text-xl font-semibold text-foreground mb-2">Няма посетени класове</h3>
-        <p className="text-muted-foreground mb-6">Запишете се за клас и той ще се появи тук след посещение.</p>
+        <h3 className="font-display text-xl font-semibold text-foreground mb-2">Няма записани събития</h3>
+        <p className="text-muted-foreground mb-6">Запишете се за клас от страницата на студиото — ще се покаже тук веднага след записване.</p>
         <Button asChild variant="outline">
           <Link href="/discover">Открий студио</Link>
         </Button>

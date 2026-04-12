@@ -146,6 +146,7 @@ export default function DashboardSchedulePage() {
         studios={myStudios}
         instructors={myInstructors}
         entry={editingSchedule}
+        onlinePayments={ws.onlinePayments}
       />
     </>
   );

@@ -45,7 +45,7 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
         : '';
 
   const basePrice = target?.kind === 'class' ? target.yogaClass.price : target?.kind === 'schedule' ? target.entry.price : 0;
-  const finalPrice = calculateFinalCustomerAmount(basePrice);
+  const finalPrice = onlinePayments ? calculateFinalCustomerAmount(basePrice) : basePrice;
 
   const handlePay = async () => {
     if (!target) return;
@@ -133,7 +133,13 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
                   <p>Ще бъдете пренасочени към Stripe за сигурно плащане.</p>
                 </>
               ) : (
-                <p className="text-foreground/90">Желаете ли да се запишете за часа / събитието?</p>
+                <>
+                  <p className="text-foreground/90">Желаете ли да се запишете за часа / събитието?</p>
+                  <p>
+                    Цена на място (без онлайн такса):{' '}
+                    <span className="font-semibold text-foreground">{formatPriceDualFromBgn(basePrice)}</span>
+                  </p>
+                </>
               )}
             </div>
           </DialogDescription>

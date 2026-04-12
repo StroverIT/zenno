@@ -5,10 +5,11 @@ export type BookingOwnerEmailProps = {
   buyerLine: string;
   lines: string[];
   paymentMode: 'online' | 'offline';
-  amountLine?: string;
+  /** Same end total as in buyer mail (EUR · BGN); online = Stripe total only, no extra tax lines. */
+  endPriceDual?: string | null;
 };
 
-export function BookingOwnerEmail({ preview, buyerLine, lines, paymentMode, amountLine }: BookingOwnerEmailProps) {
+export function BookingOwnerEmail({ preview, buyerLine, lines, paymentMode, endPriceDual }: BookingOwnerEmailProps) {
   return (
     <Html>
       <Head />
@@ -23,11 +24,19 @@ export function BookingOwnerEmail({ preview, buyerLine, lines, paymentMode, amou
                 {line}
               </Text>
             ))}
-            {paymentMode === 'online' && amountLine ? (
-              <Text style={{ fontSize: '14px', color: '#444', marginTop: '12px' }}>{amountLine}</Text>
+            {endPriceDual ? (
+              <Text style={{ fontSize: '14px', color: '#111', marginTop: '12px' }}>
+                Крайна сума
+                {paymentMode === 'offline' ? ' (клиентът плаща на място в студиото)' : ''}:{' '}
+                <strong>{endPriceDual}</strong>
+              </Text>
+            ) : paymentMode === 'offline' ? (
+              <Text style={{ fontSize: '14px', color: '#444', marginTop: '12px' }}>
+                Записване без онлайн плащане — уговорете сумата и плащането директно с клиента на място.
+              </Text>
             ) : (
               <Text style={{ fontSize: '14px', color: '#444', marginTop: '12px' }}>
-                Записване без онлайн плащане — уговорете плащането директно с клиента.
+                Онлайн плащане — детайлите са в потвърждението към клиента.
               </Text>
             )}
           </Section>

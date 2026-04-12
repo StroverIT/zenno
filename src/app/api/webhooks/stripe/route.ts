@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { queueBookingNotifications } from '@/lib/booking-notifications';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
+import { runBookingNotifications } from '@/lib/booking-notifications';
 import { getStripe } from '@/lib/stripe-server';
+import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
 export const runtime = 'nodejs';
 
@@ -39,6 +39,7 @@ type ClassLocked = {
   date: Date;
   startTime: string;
   endTime: string;
+  price: number;
 };
 
 type ScheduleLocked = {
@@ -50,6 +51,7 @@ type ScheduleLocked = {
   day: string;
   startTime: string;
   endTime: string;
+  price: number;
 };
 
 async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<string, string>): Promise<void> {
@@ -79,7 +81,7 @@ async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<
     await prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<ClassLocked[]>(
         Prisma.sql`
-          SELECT id, "studioId", enrolled, "maxCapacity", name, date, "startTime", "endTime"
+          SELECT id, "studioId", enrolled, "maxCapacity", name, date, "startTime", "endTime", price
           FROM "YogaClass"
           WHERE id = ${md.classId}
           FOR UPDATE
@@ -138,7 +140,7 @@ async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<
   }
 
   if (fulfilled && classSnapshot) {
-    queueBookingNotifications({
+    await runBookingNotifications({
       kind: 'class',
       paymentMode: 'online',
       userId: md.userId,
@@ -150,6 +152,7 @@ async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<
         date: classSnapshot.date,
         startTime: classSnapshot.startTime,
         endTime: classSnapshot.endTime,
+        basePriceBgn: Number(classSnapshot.price) || 0,
       },
     });
   }
@@ -181,7 +184,7 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
     await prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<ScheduleLocked[]>(
         Prisma.sql`
-          SELECT id, "studioId", enrolled, "maxCapacity", "className", day, "startTime", "endTime"
+          SELECT id, "studioId", enrolled, "maxCapacity", "className", day, "startTime", "endTime", price
           FROM "ScheduleEntry"
           WHERE id = ${md.scheduleEntryId}
           FOR UPDATE
@@ -240,7 +243,7 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
   }
 
   if (fulfilled && entrySnapshot) {
-    queueBookingNotifications({
+    await runBookingNotifications({
       kind: 'schedule',
       paymentMode: 'online',
       userId: md.userId,
@@ -252,17 +255,13 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
         day: entrySnapshot.day,
         startTime: entrySnapshot.startTime,
         endTime: entrySnapshot.endTime,
+        basePriceBgn: Number(entrySnapshot.price) || 0,
       },
     });
   }
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
-  if (!isOnlinePaymentsEnabled()) {
-    console.warn('[stripe webhook] ONLINE_PAYMENTS disabled; ignoring checkout.session.completed', session.id);
-    return;
-  }
-
   const existing = await prisma.payment.findUnique({
     where: { stripeCheckoutSessionId: session.id },
     select: { id: true },
@@ -285,6 +284,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
 }
 
 export async function POST(request: Request) {
+  if (!isOnlinePaymentsEnabled()) {
+    return NextResponse.json({ received: true, onlinePayments: false });
+  }
+
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
   if (!secret) {
     console.error('[stripe webhook] STRIPE_WEBHOOK_SECRET is not set');

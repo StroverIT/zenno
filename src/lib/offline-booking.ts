@@ -7,6 +7,8 @@ export type ClassSnapshot = {
   date: Date;
   startTime: string;
   endTime: string;
+  /** List price in BGN (same unit as dashboard / Stripe base). */
+  basePriceBgn: number;
 };
 
 export type ScheduleSnapshot = {
@@ -15,18 +17,31 @@ export type ScheduleSnapshot = {
   day: string;
   startTime: string;
   endTime: string;
+  basePriceBgn: number;
 };
 
-type ClassLocked = ClassSnapshot & {
+type ClassLocked = {
   id: string;
+  studioId: string;
   enrolled: number;
   maxCapacity: number;
+  name: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  price: number;
 };
 
-type ScheduleLocked = ScheduleSnapshot & {
+type ScheduleLocked = {
   id: string;
+  studioId: string;
   enrolled: number;
   maxCapacity: number;
+  className: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  price: number;
 };
 
 /** Creates Booking without Payment; increments YogaClass.enrolled. */
@@ -49,7 +64,7 @@ export async function enrollUserInYogaClassOffline(
   await prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<ClassLocked[]>(
       Prisma.sql`
-        SELECT id, "studioId", enrolled, "maxCapacity", name, date, "startTime", "endTime"
+        SELECT id, "studioId", enrolled, "maxCapacity", name, date, "startTime", "endTime", price
         FROM "YogaClass"
         WHERE id = ${classId}
         FOR UPDATE
@@ -78,6 +93,7 @@ export async function enrollUserInYogaClassOffline(
       date: cls.date,
       startTime: cls.startTime,
       endTime: cls.endTime,
+      basePriceBgn: Number(cls.price) || 0,
     };
   });
 
@@ -109,7 +125,7 @@ export async function enrollUserInScheduleOffline(
   await prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<ScheduleLocked[]>(
       Prisma.sql`
-        SELECT id, "studioId", enrolled, "maxCapacity", "className", day, "startTime", "endTime"
+        SELECT id, "studioId", enrolled, "maxCapacity", "className", day, "startTime", "endTime", price
         FROM "ScheduleEntry"
         WHERE id = ${scheduleEntryId} AND "studioId" = ${studioId}
         FOR UPDATE
@@ -138,6 +154,7 @@ export async function enrollUserInScheduleOffline(
       day: entry.day,
       startTime: entry.startTime,
       endTime: entry.endTime,
+      basePriceBgn: Number(entry.price) || 0,
     };
   });
 

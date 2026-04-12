@@ -181,6 +181,7 @@ export default function DashboardClassesPage() {
         studios={myStudios}
         instructors={myInstructors}
         classToEdit={editingClass}
+        onlinePayments={ws.onlinePayments}
       />
     </div>
   );

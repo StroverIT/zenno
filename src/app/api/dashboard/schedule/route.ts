@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { scheduleEntryToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 
@@ -87,20 +86,18 @@ export async function POST(request: Request) {
     },
   });
 
-  if (isOnlinePaymentsEnabled()) {
-    try {
-      await ensureStripeCatalogEntry({
-        name: `Schedule: ${created.className} (${created.day} ${created.startTime})`,
-        baseAmount: created.price,
-        metadata: {
-          type: 'schedule',
-          scheduleId: created.id,
-          studioId: created.studioId,
-        },
-      });
-    } catch (error) {
-      console.error('Stripe catalog sync failed for schedule', created.id, error);
-    }
+  try {
+    await ensureStripeCatalogEntry({
+      name: `Schedule: ${created.className} (${created.day} ${created.startTime})`,
+      baseAmount: created.price,
+      metadata: {
+        type: 'schedule',
+        scheduleId: created.id,
+        studioId: created.studioId,
+      },
+    });
+  } catch (error) {
+    console.error('Stripe catalog sync failed for schedule', created.id, error);
   }
 
   return NextResponse.json({ entry: scheduleEntryToDto(created) }, { status: 201 });

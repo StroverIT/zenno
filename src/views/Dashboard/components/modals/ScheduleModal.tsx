@@ -44,6 +44,7 @@ export function ScheduleModal({
   studios,
   instructors,
   entry,
+  onlinePayments = true,
 }: {
   open: boolean;
   onClose: () => void;
@@ -51,6 +52,8 @@ export function ScheduleModal({
   studios: typeof mockStudios;
   instructors: typeof mockInstructors;
   entry: ScheduleEntry | null;
+  /** When false (`ONLINE_PAYMENTS` off), no helper text under the price field. */
+  onlinePayments?: boolean;
 }) {
   const [className, setClassName] = useState('');
   const [studioId, setStudioId] = useState('');
@@ -66,9 +69,6 @@ export function ScheduleModal({
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
   const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
-  const baseBgn = hasValidBasePrice ? eurToBgn(parsedEur) : 0;
-  const processingFee = hasValidBasePrice ? calculateOnlinePaymentFee(baseBgn) : 0;
-  const finalCustomerAmount = hasValidBasePrice ? calculateFinalCustomerAmount(baseBgn) : 0;
 
   const instructorsForStudio = useMemo(
     () => (studioId ? instructors.filter(i => i.studioId === studioId) : []),
@@ -276,11 +276,13 @@ export function ScheduleModal({
                 onChange={e => setPrice(e.target.value)}
                 className="mt-1"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {hasValidBasePrice
-                  ? `Крайна цена за клиента: ${formatPriceDualFromBgn(finalCustomerAmount)} (такса ${formatPriceDualFromBgn(processingFee)} = 0,70 лв. + 3%)`
-                  : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
-              </p>
+              {onlinePayments ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {hasValidBasePrice
+                    ? `Крайна цена за клиента: ${formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса ${formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)`
+                    : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
+                </p>
+              ) : null}
             </div>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">

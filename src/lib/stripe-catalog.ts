@@ -1,4 +1,5 @@
 import { calculateFinalCustomerAmount } from '@/lib/payments';
+import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
 type StripeInterval = 'month' | 'year' | 'week' | 'day';
 
@@ -72,6 +73,8 @@ async function createStripePrice(
 }
 
 export async function ensureStripeCatalogEntry(params: EnsureStripeCatalogEntryParams): Promise<void> {
+  if (!isOnlinePaymentsEnabled()) return;
+
   const secretKey = getStripeSecretKey();
   if (!secretKey) return;
 

@@ -20,6 +20,12 @@ export function eurToBgn(eur: number): number {
   return eur * BGN_PER_EUR;
 }
 
+/** Stripe Checkout `amount_total` in EUR minor units (cents) → BGN for dual-currency display. */
+export function bgnFromStripeEurTotalMinor(amountMinor: number): number {
+  if (!Number.isFinite(amountMinor) || amountMinor <= 0) return 0;
+  return roundMoney(eurToBgn(amountMinor / 100), 2);
+}
+
 /** "12,50 € · 24,48 лв." */
 export function formatPriceDualFromBgn(bgnAmount: number): string {
   if (!Number.isFinite(bgnAmount)) return '—';

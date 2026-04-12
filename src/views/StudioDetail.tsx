@@ -15,6 +15,7 @@ import type { TabKey } from '@/components/studio-detail/studio-detail-tabs/types
 import { StudioDetailSidebar } from '@/components/studio-detail/studio-detail-sidebar';
 import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
 import { BookingCheckoutModal, type CheckoutModalTarget } from '@/components/studio-detail/booking-checkout-modal';
+import { parseOnlinePaymentsFlag } from '@/lib/payment-settings';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
 
@@ -52,10 +53,10 @@ const StudioDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    void fetch('/api/public/payment-settings')
+    void fetch('/api/public/payment-settings', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((d: { onlinePayments?: boolean }) => {
-        if (typeof d.onlinePayments === 'boolean') setOnlinePayments(d.onlinePayments);
+      .then((d: { onlinePayments?: unknown }) => {
+        setOnlinePayments(parseOnlinePaymentsFlag(d.onlinePayments));
       })
       .catch(() => {});
   }, []);

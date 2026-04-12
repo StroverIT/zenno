@@ -2,7 +2,8 @@ import { render } from '@react-email/render';
 import { BookingBuyerEmail } from '@/emails/booking-buyer-email';
 import { BookingOwnerEmail } from '@/emails/booking-owner-email';
 import { googleCalendarUrlForScheduleEntry, googleCalendarUrlForYogaClass } from '@/lib/google-calendar-link';
-import { isMailConfigured, sendHtmlEmail } from '@/lib/mailer';
+import { describeMailConfigGap, isMailConfigured, sendHtmlEmail } from '@/lib/mailer';
+import { eurToBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 
 export type BookingEmailKind = 'class' | 'schedule';
 
@@ -11,6 +12,8 @@ export type ClassEmailDetail = {
   date: Date;
   startTime: string;
   endTime: string;
+  /** BGN list price — offline emails use this as the end amount (на място). */
+  basePriceBgn?: number;
 };
 
 export type ScheduleEmailDetail = {
@@ -18,13 +21,21 @@ export type ScheduleEmailDetail = {
   day: string;
   startTime: string;
   endTime: string;
+  /** BGN list price — offline emails use this as the end amount (на място). */
+  basePriceBgn?: number;
 };
 
+/**
+ * Sends up to two messages: one to the customer, one to the studio (public `studioEmail`, else owner).
+ */
 export async function sendBookingConfirmationEmails(params: {
   kind: BookingEmailKind;
   paymentMode: 'online' | 'offline';
   buyerEmail: string | null | undefined;
   buyerName: string | null | undefined;
+  /** Studio inbox from `Studio.email` */
+  studioEmail: string | null | undefined;
+  /** Fallback if studio has no public email */
   ownerEmail: string | null | undefined;
   studioName: string;
   studioAddress: string;
@@ -34,15 +45,12 @@ export async function sendBookingConfirmationEmails(params: {
   scheduleDetail?: ScheduleEmailDetail;
 }): Promise<void> {
   if (!isMailConfigured()) {
-    console.warn('[booking-email] SMTP_HOST / EMAIL_FROM missing; skipping send');
+    const gap = describeMailConfigGap();
+    console.warn('[booking-email] Mail not configured; skipping send.', gap.hint, gap);
     return;
   }
 
   const buyerName = params.buyerName?.trim() || 'Клиент';
-  const amountLabel =
-    params.amountMinor > 0
-      ? `${(params.amountMinor / 100).toFixed(2)} ${params.currency.toUpperCase()}`
-      : '';
 
   let calendarUrl: string | undefined;
   let subjectBuyer = '';
@@ -65,9 +73,6 @@ export async function sendBookingConfirmationEmails(params: {
       `Дата: ${c.date.toISOString().slice(0, 10)}, ${c.startTime}–${c.endTime}`,
       `Студио: ${params.studioName}`,
     ];
-    if (params.paymentMode === 'online' && amountLabel) {
-      buyerLines.push(`Платено онлайн: ${amountLabel}`);
-    }
     ownerLines = [
       `Клас: ${c.name}`,
       `Дата: ${c.date.toISOString().slice(0, 10)}, ${c.startTime}–${c.endTime}`,
@@ -89,9 +94,6 @@ export async function sendBookingConfirmationEmails(params: {
       `Ден: ${s.day}, ${s.startTime}–${s.endTime}`,
       `Студио: ${params.studioName}`,
     ];
-    if (params.paymentMode === 'online' && amountLabel) {
-      buyerLines.push(`Платено онлайн: ${amountLabel}`);
-    }
     ownerLines = [
       `Разписание: ${s.className}`,
       `Ден: ${s.day}, ${s.startTime}–${s.endTime}`,
@@ -102,33 +104,56 @@ export async function sendBookingConfirmationEmails(params: {
     return;
   }
 
-  const buyerTo = params.buyerEmail?.trim();
-  if (buyerTo && subjectBuyer) {
-    const htmlBuyer = await render(
-      <BookingBuyerEmail
-        preview={subjectBuyer}
-        headline={subjectBuyer}
-        lines={buyerLines}
-        calendarUrl={calendarUrl}
-        paymentMode={params.paymentMode}
-      />,
-    );
-    await sendHtmlEmail({ to: buyerTo, subject: subjectBuyer, html: htmlBuyer });
+  const buyerTo = params.buyerEmail?.trim().toLowerCase() ?? '';
+  const buyerToOriginal = params.buyerEmail?.trim() ?? '';
+  const studioToRaw = params.studioEmail?.trim() || params.ownerEmail?.trim() || '';
+  const studioTo = studioToRaw.toLowerCase();
+
+  const baseBgn =
+    params.kind === 'class' ? params.classDetail?.basePriceBgn : params.scheduleDetail?.basePriceBgn;
+  const endPriceDual =
+    params.paymentMode === 'online' && params.amountMinor > 0
+      ? formatPriceDualFromBgn(eurToBgn(params.amountMinor / 100))
+      : params.paymentMode === 'offline' && typeof baseBgn === 'number' && baseBgn > 0
+        ? formatPriceDualFromBgn(baseBgn)
+        : null;
+
+  if (buyerToOriginal && subjectBuyer) {
+    try {
+      const htmlBuyer = await render(
+        <BookingBuyerEmail
+          preview={subjectBuyer}
+          headline={subjectBuyer}
+          lines={buyerLines}
+          calendarUrl={calendarUrl}
+          paymentMode={params.paymentMode}
+          endPriceDual={endPriceDual}
+        />,
+      );
+      await sendHtmlEmail({ to: buyerToOriginal, subject: subjectBuyer, html: htmlBuyer });
+    } catch (err) {
+      console.error('[booking-email] failed to send customer confirmation', { to: buyerToOriginal, err });
+    }
   }
 
-  const ownerSubject = `Нова резервация — ${params.studioName}`;
-  const buyerToDisplay = buyerTo ?? 'няма имейл';
-  const htmlOwner = await render(
-    <BookingOwnerEmail
-      preview={ownerSubject}
-      buyerLine={`${buyerName} (${buyerToDisplay}) се записа.`}
-      lines={ownerLines}
-      paymentMode={params.paymentMode}
-      amountLine={params.paymentMode === 'online' && amountLabel ? `Сума (Stripe): ${amountLabel}` : undefined}
-    />,
-  );
-  const ownerTo = params.ownerEmail?.trim();
-  if (ownerTo) {
-    await sendHtmlEmail({ to: ownerTo, subject: ownerSubject, html: htmlOwner });
+  const studioSubject = `Нова резервация — ${params.studioName}`;
+  const buyerToDisplay = buyerToOriginal || 'няма имейл';
+  if (studioToRaw && studioTo !== buyerTo) {
+    try {
+      const htmlStudio = await render(
+        <BookingOwnerEmail
+          preview={studioSubject}
+          buyerLine={`${buyerName} (${buyerToDisplay}) се записа.`}
+          lines={ownerLines}
+          paymentMode={params.paymentMode}
+          endPriceDual={endPriceDual}
+        />,
+      );
+      await sendHtmlEmail({ to: studioToRaw, subject: studioSubject, html: htmlStudio });
+    } catch (err) {
+      console.error('[booking-email] failed to send studio notification', { to: studioToRaw, err });
+    }
+  } else if (!studioToRaw) {
+    console.warn('[booking-email] no studio email (Studio.email or owner); skipping studio notification');
   }
 }
