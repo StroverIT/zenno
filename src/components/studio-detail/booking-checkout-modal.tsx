@@ -124,23 +124,14 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
             <div className="space-y-2 text-left text-sm text-muted-foreground">
               <p className="font-medium text-foreground">{title}</p>
               <p>{subtitle}</p>
-              {onlinePayments ? (
-                <>
-                  <p>
-                    Крайна сума (с онлайн такса):{' '}
-                    <span className="font-semibold text-foreground">{formatPriceDualFromBgn(finalPrice)}</span>
-                  </p>
-                  <p>Ще бъдете пренасочени към Stripe за сигурно плащане.</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-foreground/90">Желаете ли да се запишете за часа / събитието?</p>
-                  <p>
-                    Цена на място (без онлайн такса):{' '}
-                    <span className="font-semibold text-foreground">{formatPriceDualFromBgn(basePrice)}</span>
-                  </p>
-                </>
-              )}
+
+              <>
+                <p className="text-foreground/90">Желаете ли да се запишете за часа / събитието?</p>
+                <p>
+                  Цена:{' '}
+                  <span className="font-semibold text-foreground">{formatPriceDualFromBgn(onlinePayments ? finalPrice : basePrice)}</span>
+                </p>
+              </>
             </div>
           </DialogDescription>
         </DialogHeader>

@@ -183,9 +183,6 @@ export default function ProfileHistoryPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-display text-lg font-semibold text-foreground">Моите разходи</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Суми по потвърдени резервации — събития и разписание; при онлайн плащане са с включени такси в приложението.
-          </p>
           <p className="mt-4 text-3xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(totalSpent)}</p>
           <div className="mt-4 space-y-2">
             {spendingHistory.length === 0 ? (
@@ -207,7 +204,6 @@ export default function ProfileHistoryPage() {
         </div>
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-display text-lg font-semibold text-foreground">Моите абонаменти</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Месечни планове при любими студиа с активен абонамент.</p>
           <div className="mt-4 space-y-2">
             {activeSubscriptions.length === 0 ? (
               <p className="text-sm text-muted-foreground">Нямате любими студиа с активен месечен план.</p>
