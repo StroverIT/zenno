@@ -1,5 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import { Button } from '@/components/ui/button';
+import { privateAreaRobots } from '@/lib/site';
+
+export const metadata: Metadata = {
+  title: 'Успешно плащане',
+  description: 'Плащането през Stripe е прието; записът за класа е потвърден.',
+  robots: privateAreaRobots,
+};
 
 type Search = { session_id?: string | string[] };
 

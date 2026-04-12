@@ -1,12 +1,32 @@
-import type { Metadata } from "next";
-import { DiscoverAsideMenu } from "@/components/discover/DiscoverAsideMenu";
-import { DiscoverPageAsideColumn } from "@/components/discover/discover-page-aside-column";
-import { DiscoverMainContent } from "@/components/discover/discover-main-content";
+import type { Metadata } from 'next';
+
+import { DiscoverAsideMenu } from '@/components/discover/DiscoverAsideMenu';
+import { defaultShareOgImages, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
+import { DiscoverMainContent } from '@/components/discover/discover-main-content';
+import { DiscoverPageAsideColumn } from '@/components/discover/discover-page-aside-column';
 
 export const metadata: Metadata = {
-  title: "Открий студио | Zenno",
+  title: 'Открий студио',
   description:
-    "Намери най-доброто йога студио близо до теб. Филтрирай по ниво, тип йога и рейтинг.",
+    'Намери най-доброто йога студио близо до теб. Филтрирай по ниво, тип йога и рейтинг.',
+  alternates: {
+    canonical: '/discover',
+  },
+  openGraph: {
+    type: 'website',
+    title: 'Открий студио',
+    description:
+      'Намери най-доброто йога студио близо до теб. Филтрирай по ниво, тип йога и рейтинг.',
+    url: '/discover',
+    images: defaultShareOgImages,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Открий студио',
+    description:
+      'Намери най-доброто йога студио близо до теб. Филтрирай по ниво, тип йога и рейтинг.',
+    images: [...defaultShareTwitterImagePaths],
+  },
 };
 
 export default function DiscoverPage() {

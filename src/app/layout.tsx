@@ -1,4 +1,5 @@
 import './globals.css';
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { GeistMono } from 'geist/font/mono';
 import { Nunito, Playfair_Display } from 'next/font/google';
@@ -7,6 +8,41 @@ import { authOptions } from '@/lib/auth';
 import { sessionToNavUser } from '@/lib/nav-user';
 import { AppProviders } from '@/components/AppProviders';
 import SiteLayout from '@/components/SiteLayout';
+import { defaultSiteDescription, getSiteUrl, siteName } from '@/lib/site';
+import { defaultShareOgImages, defaultShareTwitterImagePaths, facebookAppMetadata } from '@/lib/share-metadata';
+
+const siteUrl = getSiteUrl();
+
+const publicSiteTitle = 'Йога студиа, класове и онлайн записване';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: publicSiteTitle,
+  },
+  description: defaultSiteDescription,
+  applicationName: siteName,
+  openGraph: {
+    type: 'website',
+    locale: 'bg_BG',
+    siteName,
+    url: siteUrl,
+    title: publicSiteTitle,
+    description: defaultSiteDescription,
+    images: defaultShareOgImages,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: publicSiteTitle,
+    description: defaultSiteDescription,
+    images: [...defaultShareTwitterImagePaths],
+  },
+  icons: {
+    icon: [{ url: '/homepage/logo-no-name.png', type: 'image/png' }],
+    apple: '/homepage/logo-no-name.png',
+  },
+  ...facebookAppMetadata(),
+};
 
 const nunito = Nunito({
   subsets: ['latin', 'cyrillic'],
