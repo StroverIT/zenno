@@ -1,5 +1,6 @@
 export const USER_ANALYTICS_EVENTS = [
   'signup_completed',
+  'signin_completed_client',
   'search_performed',
   'studio_view',
   'schedule_view',
@@ -9,6 +10,7 @@ export const USER_ANALYTICS_EVENTS = [
 
 export const STUDIO_ANALYTICS_EVENTS = [
   'studio_signup_completed',
+  'signin_completed_business',
   'studio_profile_completed',
   'studio_first_class_created',
   'studio_first_event_published',

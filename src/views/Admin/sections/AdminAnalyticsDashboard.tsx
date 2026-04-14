@@ -89,6 +89,70 @@ export function AdminAnalyticsDashboard({ analytics }: AdminAnalyticsDashboardPr
         </section>
 
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <Card className="rounded-2xl border-border/80 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">
+                <MetricLabel
+                  label="Signups This Month"
+                  tooltip="Регистрации за текущия месец, разделени по клиентски и бизнес акаунти."
+                />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+                <span className="text-sm text-muted-foreground">
+                  <MetricLabel label="Client Signups" tooltip="Брой нови клиентски регистрации за текущия месец." />
+                </span>
+                <span className="font-semibold">{analytics.monthlyAuth.signups.client}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+                <span className="text-sm text-muted-foreground">
+                  <MetricLabel label="Business Signups" tooltip="Брой нови бизнес регистрации за текущия месец." />
+                </span>
+                <span className="font-semibold">{analytics.monthlyAuth.signups.business}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+                <span className="text-sm text-muted-foreground">
+                  <MetricLabel label="Total Signups" tooltip="Общ брой всички регистрации за текущия месец." />
+                </span>
+                <span className="font-semibold">{analytics.monthlyAuth.signups.total}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-border/80 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">
+                <MetricLabel
+                  label="Sign-ins This Month"
+                  tooltip="Входове в системата за текущия месец, разделени по клиентски и бизнес акаунти."
+                />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+                <span className="text-sm text-muted-foreground">
+                  <MetricLabel label="Client Sign-ins" tooltip="Брой успешни входове на клиентски акаунти за текущия месец." />
+                </span>
+                <span className="font-semibold">{analytics.monthlyAuth.signins.client}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+                <span className="text-sm text-muted-foreground">
+                  <MetricLabel label="Business Sign-ins" tooltip="Брой успешни входове на бизнес акаунти за текущия месец." />
+                </span>
+                <span className="font-semibold">{analytics.monthlyAuth.signins.business}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+                <span className="text-sm text-muted-foreground">
+                  <MetricLabel label="Total Sign-ins" tooltip="Общ брой всички успешни входове за текущия месец." />
+                </span>
+                <span className="font-semibold">{analytics.monthlyAuth.signins.total}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card className="rounded-2xl border-border/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base font-semibold">User Funnel</CardTitle>

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { getAdminAnalytics } from '@/lib/admin-analytics';
 import { AdminAnalyticsDashboard } from '@/views/Admin/sections/AdminAnalyticsDashboard';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Analytics',
   description: 'Marketplace analytics and growth metrics.',

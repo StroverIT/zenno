@@ -55,10 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!next) next = '/';
 
     const registrationRole = options?.registrationRole;
-    const oauthCallback =
-      registrationRole === 'business'
-        ? `/api/auth/complete-google?role=business&next=${encodeURIComponent(next)}`
-        : next;
+    const oauthCallback = `/api/auth/complete-google${registrationRole === 'business' ? '?role=business&' : '?'}next=${encodeURIComponent(next)}`;
 
     await signIn('google', { callbackUrl: oauthCallback });
   }, []);

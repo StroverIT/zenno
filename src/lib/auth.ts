@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from './prisma';
 import bcrypt from 'bcrypt';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -50,6 +51,30 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   callbacks: {
+    async signIn({ user, account }) {
+      const userId = typeof user.id === 'string' ? user.id : null;
+      const userEmail = typeof user.email === 'string' ? user.email : null;
+
+      const dbUser =
+        userId != null
+          ? await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true } })
+          : userEmail != null
+            ? await prisma.user.findUnique({ where: { email: userEmail }, select: { id: true, role: true } })
+            : null;
+
+      if (dbUser) {
+        await trackServerEvent({
+          eventName: dbUser.role === 'business' ? 'signin_completed_business' : 'signin_completed_client',
+          userId: dbUser.id,
+          metadata: {
+            provider: account?.provider ?? 'unknown',
+            method: account?.type ?? 'unknown',
+          },
+        });
+      }
+
+      return true;
+    },
     async jwt({ token, user }) {
       const t: any = token;
       if (user) {

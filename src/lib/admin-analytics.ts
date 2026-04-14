@@ -39,6 +39,18 @@ export type AdminAnalyticsPayload = {
     completedOnboarding: number;
     completionRate: number;
   };
+  monthlyAuth: {
+    signups: {
+      client: number;
+      business: number;
+      total: number;
+    };
+    signins: {
+      client: number;
+      business: number;
+      total: number;
+    };
+  };
   timeSeries: TimeSeriesPoint[];
   topPerformingStudios: Array<{
     studioId: string;
@@ -64,6 +76,12 @@ function percentage(part: number, total: number): number {
   return Number(((part / total) * 100).toFixed(2));
 }
 
+function currentMonthRange(): { start: Date; end: Date } {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+  return { start, end: now };
+}
+
 export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promise<AdminAnalyticsPayload> {
   const { from, to } = query.from && query.to ? { from: query.from, to: query.to } : defaultDateRange();
 
@@ -75,7 +93,9 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
     },
   };
 
-  const [totalUsers, classBookings, scheduleBookings, totalStudios, totalBusinessAccounts, businessStudios, userFunnelGrouped, studioProfileEvents, bookingsByDay, signupsByDay, studiosWithClassRows, topPerformingStudios] =
+  const month = currentMonthRange();
+
+  const [totalUsers, classBookings, scheduleBookings, totalStudios, totalBusinessAccounts, businessStudios, userFunnelGrouped, studioProfileEvents, bookingsByDay, signupsByDay, studiosWithClassRows, topPerformingStudios, monthlySignupsClient, monthlySignupsBusiness, monthlySigninsClient, monthlySigninsBusiness] =
     await Promise.all([
       prisma.user.count(),
       prisma.booking.count(),
@@ -150,6 +170,42 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
         },
         take: 5,
       }),
+      prisma.analyticsEvent.count({
+        where: {
+          event_name: 'signup_completed',
+          created_at: {
+            gte: month.start,
+            lte: month.end,
+          },
+        },
+      }),
+      prisma.analyticsEvent.count({
+        where: {
+          event_name: 'studio_signup_completed',
+          created_at: {
+            gte: month.start,
+            lte: month.end,
+          },
+        },
+      }),
+      prisma.analyticsEvent.count({
+        where: {
+          event_name: 'signin_completed_client',
+          created_at: {
+            gte: month.start,
+            lte: month.end,
+          },
+        },
+      }),
+      prisma.analyticsEvent.count({
+        where: {
+          event_name: 'signin_completed_business',
+          created_at: {
+            gte: month.start,
+            lte: month.end,
+          },
+        },
+      }),
     ]);
 
   const funnelMap = new Map(userFunnelGrouped.map((row) => [row.event_name, row._count._all]));
@@ -210,6 +266,18 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
       totalBusinessAccounts,
       completedOnboarding,
       completionRate: percentage(completedOnboarding, totalBusinessAccounts),
+    },
+    monthlyAuth: {
+      signups: {
+        client: monthlySignupsClient,
+        business: monthlySignupsBusiness,
+        total: monthlySignupsClient + monthlySignupsBusiness,
+      },
+      signins: {
+        client: monthlySigninsClient,
+        business: monthlySigninsBusiness,
+        total: monthlySigninsClient + monthlySigninsBusiness,
+      },
     },
     timeSeries,
     topPerformingStudios: topPerformingStudios
