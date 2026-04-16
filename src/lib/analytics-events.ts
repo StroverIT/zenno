@@ -1,4 +1,7 @@
 export const USER_ANALYTICS_EVENTS = [
+  'home_page_view',
+  'discover_page_view',
+  'studio_page_view',
   'signup_completed',
   'signin_completed_client',
   'search_performed',

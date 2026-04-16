@@ -20,6 +20,12 @@ export type AdminAnalyticsPayload = {
     totalUsers: number;
     totalBookings: number;
     conversionRate: number;
+    totalPageViews: number;
+  };
+  pageViews: {
+    home: number;
+    discover: number;
+    studio: number;
   };
   userFunnel: {
     signupCompleted: number;
@@ -55,6 +61,10 @@ export type AdminAnalyticsPayload = {
   topPerformingStudios: Array<{
     studioId: string;
     bookings: number;
+  }>;
+  studioPageViews: Array<{
+    studioId: string;
+    views: number;
   }>;
 };
 
@@ -95,7 +105,7 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
 
   const month = currentMonthRange();
 
-  const [totalUsers, classBookings, scheduleBookings, totalStudios, totalBusinessAccounts, businessStudios, userFunnelGrouped, studioProfileEvents, bookingsByDay, signupsByDay, studiosWithClassRows, topPerformingStudios, monthlySignupsClient, monthlySignupsBusiness, monthlySigninsClient, monthlySigninsBusiness] =
+  const [totalUsers, classBookings, scheduleBookings, totalStudios, totalBusinessAccounts, businessStudios, userFunnelGrouped, studioProfileEvents, bookingsByDay, signupsByDay, studiosWithClassRows, topPerformingStudios, monthlySignupsClient, monthlySignupsBusiness, monthlySigninsClient, monthlySigninsBusiness, pageViewGrouped, studioPageViews] =
     await Promise.all([
       prisma.user.count(),
       prisma.booking.count(),
@@ -208,9 +218,33 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
           },
         },
       }),
+      prisma.analyticsEvent.groupBy({
+        by: ['event_name'],
+        where: {
+          ...eventWhere,
+          event_name: {
+            in: ['home_page_view', 'discover_page_view', 'studio_page_view'],
+          },
+        },
+        _count: {
+          _all: true,
+        },
+      }),
+      prisma.analyticsEvent.groupBy({
+        by: ['studio_id'],
+        where: {
+          ...eventWhere,
+          event_name: 'studio_page_view',
+          studio_id: { not: null },
+        },
+        _count: {
+          _all: true,
+        },
+      }),
     ]);
 
   const funnelMap = new Map(userFunnelGrouped.map((row) => [row.event_name, row._count._all]));
+  const pageViewMap = new Map(pageViewGrouped.map((row) => [row.event_name, row._count._all]));
 
   const days = Array.from({ length: 7 }).map((_, idx) => {
     const d = new Date(from);
@@ -244,12 +278,22 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
   const completedOnboarding = new Set(businessStudios.map((row) => row.ownerUserId)).size;
   const studiosWithProfileCompleted = new Set(studioProfileEvents.map((row) => row.studio_id).filter(Boolean)).size;
   const studiosWithClass = new Set(studiosWithClassRows.map((row) => row.studioId)).size;
+  const homePageViews = pageViewMap.get('home_page_view') ?? 0;
+  const discoverPageViews = pageViewMap.get('discover_page_view') ?? 0;
+  const studioViews = pageViewMap.get('studio_page_view') ?? 0;
+  const totalPageViews = homePageViews + discoverPageViews + studioViews;
 
   return {
     overview: {
       totalUsers,
       totalBookings,
       conversionRate: percentage(totalBookings, totalUsers),
+      totalPageViews,
+    },
+    pageViews: {
+      home: homePageViews,
+      discover: discoverPageViews,
+      studio: studioViews,
     },
     userFunnel: {
       signupCompleted: funnelMap.get('signup_completed') ?? 0,
@@ -287,6 +331,12 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
       .map((row) => ({
         studioId: row.studio_id,
         bookings: row._count._all,
+      })),
+    studioPageViews: studioPageViews
+      .filter((row): row is typeof row & { studio_id: string } => Boolean(row.studio_id))
+      .map((row) => ({
+        studioId: row.studio_id,
+        views: row._count._all,
       })),
   };
 }

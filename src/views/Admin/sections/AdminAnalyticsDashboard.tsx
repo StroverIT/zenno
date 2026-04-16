@@ -1,4 +1,8 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AdminAnalyticsPayload } from '@/lib/admin-analytics';
 import { BookingsLineChart } from '@/views/Admin/components/analytics/BookingsLineChart';
@@ -24,17 +28,22 @@ function MetricLabel({ label, tooltip }: { label: string; tooltip: string }) {
 }
 
 export function AdminAnalyticsDashboard({ analytics }: AdminAnalyticsDashboardProps) {
+  const [studioViewsSort, setStudioViewsSort] = useState<'most' | 'least'>('most');
   const funnel = [
     { step: 'Signup', count: analytics.userFunnel.signupCompleted },
     { step: 'Search', count: analytics.userFunnel.searchPerformed },
     { step: 'Booking Started', count: analytics.userFunnel.bookingStarted },
     { step: 'Booking Completed', count: analytics.userFunnel.bookingCompleted },
   ];
+  const sortedStudioPageViews = useMemo(() => {
+    const rows = [...analytics.studioPageViews];
+    return rows.sort((a, b) => (studioViewsSort === 'most' ? b.views - a.views : a.views - b.views));
+  }, [analytics.studioPageViews, studioViewsSort]);
 
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card className="rounded-2xl border-border/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -58,6 +67,14 @@ export function AdminAnalyticsDashboard({ analytics }: AdminAnalyticsDashboardPr
             </CardTitle>
           </CardHeader>
           <CardContent className="text-3xl font-semibold">{percent(analytics.overview.conversionRate)}</CardContent>
+        </Card>
+        <Card className="rounded-2xl border-border/80 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              <MetricLabel label="Total Page Views" tooltip="Общ брой зареждания на Home, Discover и Studio страници." />
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-3xl font-semibold">{analytics.overview.totalPageViews}</CardContent>
         </Card>
         </section>
 
@@ -208,8 +225,62 @@ export function AdminAnalyticsDashboard({ analytics }: AdminAnalyticsDashboardPr
         </section>
 
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card className="rounded-2xl border-border/80 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Page Views by Page</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+              <span className="text-sm text-muted-foreground">Home (`/`)</span>
+              <span className="font-semibold">{analytics.pageViews.home}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+              <span className="text-sm text-muted-foreground">Discover (`/discover`)</span>
+              <span className="font-semibold">{analytics.pageViews.discover}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+              <span className="text-sm text-muted-foreground">Studio (`/studio/[id]`)</span>
+              <span className="font-semibold">{analytics.pageViews.studio}</span>
+            </div>
+          </CardContent>
+        </Card>
+
         <BookingsLineChart data={analytics.timeSeries.map((d) => ({ date: d.date, bookings: d.bookings, signups: d.signups, total: d.bookings + d.signups }))} />
-        <FunnelBarChart data={funnel} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <FunnelBarChart data={funnel} />
+          <Card className="rounded-2xl border-border/80 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between gap-3">
+              <CardTitle className="text-base font-semibold">
+                <MetricLabel
+                  label="Studio Page Views"
+                  tooltip="Показвания на страниците на студиа, с опция за сортиране по най-много или най-малко гледания."
+                />
+              </CardTitle>
+              <Select value={studioViewsSort} onValueChange={(value) => setStudioViewsSort(value as 'most' | 'least')}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="most">Most views</SelectItem>
+                  <SelectItem value="least">Least views</SelectItem>
+                </SelectContent>
+              </Select>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {sortedStudioPageViews.length > 0 ? (
+                sortedStudioPageViews.map((studio) => (
+                  <div key={studio.studioId} className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+                    <span className="font-mono text-xs text-muted-foreground">{studio.studioId}</span>
+                    <span className="font-semibold">{studio.views} views</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No studio page views in this period.</p>
+              )}
+            </CardContent>
+          </Card>
         </section>
 
         {analytics.topPerformingStudios.length > 0 ? (

@@ -8,6 +8,7 @@ import {
   HomeNearbyStudiosSectionSkeleton,
   HomeTopStudiosSectionSkeleton,
 } from '@/components/home/home-section-skeletons';
+import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { HomeStudiosFavoriteShell } from '@/components/home/home-studios-favorite-shell';
 import HomeTopStudiosSectionServer from '@/components/home/home-top-studios-section-server';
 import { defaultSiteDescription } from '@/lib/site';
@@ -41,6 +42,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="font-body">
+      <PageViewTracker event="home_page_view" />
       <Suspense fallback={<HomeHeroSectionSkeleton />}>
         <HomeHeroSectionServer />
       </Suspense>

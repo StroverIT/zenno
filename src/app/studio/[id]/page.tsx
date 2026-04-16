@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
+import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { prisma } from '@/lib/prisma';
 import { getSiteUrl } from '@/lib/site';
 import { absoluteOgImageUrl, defaultShareOgImage, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
@@ -84,6 +85,7 @@ export default async function StudioDetailPage({ params }: PageProps) {
 
   return (
     <Suspense fallback={<StudioDetailPageSkeleton />}>
+      <PageViewTracker event="studio_page_view" studioId={id} />
       <StudioDetail />
     </Suspense>
   );

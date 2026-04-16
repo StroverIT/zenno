@@ -4,6 +4,7 @@ import { DiscoverAsideMenu } from '@/components/discover/DiscoverAsideMenu';
 import { defaultShareOgImages, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
 import { DiscoverMainContent } from '@/components/discover/discover-main-content';
 import { DiscoverPageAsideColumn } from '@/components/discover/discover-page-aside-column';
+import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 
 export const metadata: Metadata = {
   title: 'Открий студио',
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
 export default function DiscoverPage() {
   return (
     <div className="flex min-h-screen flex-col bg-yoga-bg">
+      <PageViewTracker event="discover_page_view" />
       <main className="container mx-auto flex-1 px-4 py-8">
         <div className="mb-8">
           <h1 className="font-serif text-3xl font-semibold text-yoga-text md:text-4xl">
