@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
 import { instructorToDto } from '@/lib/public-studio-dto';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
 
@@ -67,5 +68,6 @@ export async function POST(request: Request) {
     },
   });
 
+  invalidateAfterCatalogChange();
   return NextResponse.json({ instructor: instructorToDto(created) }, { status: 201 });
 }

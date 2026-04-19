@@ -1,9 +1,10 @@
 import { cache } from "react";
-import { unstable_noStore as noStore } from 'next/cache';
+import { unstable_cache } from 'next/cache';
 import type { Studio, YogaClass } from "@/data/mock-data";
 import { getPublicCatalogCached } from "@/lib/get-public-catalog";
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/api-auth';
+import { CACHE_TAGS } from '@/lib/app-revalidate';
 
 /**
  * Per-request dedupe; all home sections share one `getPublicCatalogCached()` read
@@ -54,11 +55,16 @@ type RetreatRow = {
   maxCapacity: number;
   enrolled: number;
   price: number;
-  startDate: Date;
-  endDate: Date;
-  createdAt: Date;
+  startDate: Date | string;
+  endDate: Date | string;
+  createdAt: Date | string;
   studio: { name: string; isHidden: boolean; phone: string; email: string };
 };
+
+function toIsoDate(value: Date | string): string {
+  if (value instanceof Date) return value.toISOString();
+  return new Date(value).toISOString();
+}
 
 function mapRetreatRow(retreat: RetreatRow, isEnrolled = false): HomeRetreat {
   return {
@@ -74,9 +80,9 @@ function mapRetreatRow(retreat: RetreatRow, isEnrolled = false): HomeRetreat {
     maxCapacity: retreat.maxCapacity,
     enrolled: retreat.enrolled,
     price: retreat.price,
-    startDate: retreat.startDate.toISOString().slice(0, 10),
-    endDate: retreat.endDate.toISOString().slice(0, 10),
-    createdAt: retreat.createdAt.toISOString(),
+    startDate: toIsoDate(retreat.startDate).slice(0, 10),
+    endDate: toIsoDate(retreat.endDate).slice(0, 10),
+    createdAt: toIsoDate(retreat.createdAt),
     studioName: retreat.studio.name,
     contactPhone: retreat.studio.phone,
     contactEmail: retreat.studio.email,
@@ -84,17 +90,7 @@ function mapRetreatRow(retreat: RetreatRow, isEnrolled = false): HomeRetreat {
   };
 }
 
-export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
-  noStore();
-  const user = await getSessionUser();
-  const retreatBookingDelegate = (prisma as unknown as {
-    retreatBooking: {
-      findMany: (args: {
-        where: { userId: string; retreatId: { in: string[] } };
-        select: { retreatId: true };
-      }) => Promise<Array<{ retreatId: string }>>;
-    };
-  }).retreatBooking;
+async function getPublishedRetreatRows(limit: number): Promise<RetreatRow[]> {
   const retreatDelegate = (prisma as unknown as {
     retreat: {
       findMany: (args: {
@@ -110,7 +106,8 @@ export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
       }) => Promise<RetreatRow[]>;
     };
   }).retreat;
-  const retreats = await retreatDelegate.findMany({
+
+  return retreatDelegate.findMany({
     where: {
       isPublished: true,
       isHidden: false,
@@ -121,6 +118,57 @@ export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
     orderBy: [{ createdAt: 'desc' }],
     take: limit,
   });
+}
+
+const getPublishedRetreatRowsCached = unstable_cache(getPublishedRetreatRows, ['published-retreats'], {
+  tags: [CACHE_TAGS.publicRetreats, CACHE_TAGS.publicRetreat],
+  revalidate: 300,
+});
+
+async function getPublishedRetreatRowById(id: string): Promise<RetreatRow | null> {
+  const retreatDelegate = (prisma as unknown as {
+    retreat: {
+      findFirst: (args: {
+        where: {
+          id: string;
+          isPublished: boolean;
+          isHidden: boolean;
+        };
+        include: {
+          studio: { select: { name: true; isHidden: true; phone: true; email: true } };
+        };
+      }) => Promise<RetreatRow | null>;
+    };
+  }).retreat;
+
+  return retreatDelegate.findFirst({
+    where: {
+      id,
+      isPublished: true,
+      isHidden: false,
+    },
+    include: {
+      studio: { select: { name: true, isHidden: true, phone: true, email: true } },
+    },
+  });
+}
+
+const getPublishedRetreatRowByIdCached = unstable_cache(getPublishedRetreatRowById, ['published-retreat-by-id'], {
+  tags: [CACHE_TAGS.publicRetreats, CACHE_TAGS.publicRetreat],
+  revalidate: 300,
+});
+
+export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
+  const user = await getSessionUser();
+  const retreatBookingDelegate = (prisma as unknown as {
+    retreatBooking: {
+      findMany: (args: {
+        where: { userId: string; retreatId: { in: string[] } };
+        select: { retreatId: true };
+      }) => Promise<Array<{ retreatId: string }>>;
+    };
+  }).retreatBooking;
+  const retreats = await getPublishedRetreatRowsCached(limit);
 
   const enrolledIds = new Set<string>();
   if (user?.id && retreats.length > 0) {
@@ -138,7 +186,6 @@ export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
 }
 
 export async function getHomeRetreatById(id: string): Promise<HomeRetreat | null> {
-  noStore();
   const user = await getSessionUser();
   const retreatBookingDelegate = (prisma as unknown as {
     retreatBooking: {
@@ -148,30 +195,7 @@ export async function getHomeRetreatById(id: string): Promise<HomeRetreat | null
       }) => Promise<{ retreatId: string } | null>;
     };
   }).retreatBooking;
-  const retreatDelegate = (prisma as unknown as {
-    retreat: {
-      findFirst: (args: {
-        where: {
-          id: string;
-          isPublished: boolean;
-          isHidden: boolean;
-        };
-        include: {
-          studio: { select: { name: true; isHidden: true; phone: true; email: true } };
-        };
-      }) => Promise<RetreatRow | null>;
-    };
-  }).retreat;
-  const retreat = await retreatDelegate.findFirst({
-    where: {
-      id,
-      isPublished: true,
-      isHidden: false,
-    },
-    include: {
-      studio: { select: { name: true, isHidden: true, phone: true, email: true } },
-    },
-  });
+  const retreat = await getPublishedRetreatRowByIdCached(id);
 
   if (!retreat) return null;
   let isEnrolled = false;

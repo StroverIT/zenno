@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
 import { retreatToDto } from '@/lib/public-studio-dto';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
 
@@ -158,5 +159,6 @@ export async function POST(request: Request) {
       isHidden: false,
     },
   });
+  invalidateAfterCatalogChange(created.id);
   return NextResponse.json({ retreat: retreatToDto(created) }, { status: 201 });
 }

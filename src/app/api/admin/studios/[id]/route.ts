@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError, requireRole } from '@/lib/api-auth';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
@@ -31,5 +32,6 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     select: { id: true, isHidden: true },
   });
 
+  invalidateAfterCatalogChange();
   return NextResponse.json({ studio });
 }

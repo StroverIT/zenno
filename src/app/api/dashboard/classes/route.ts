@@ -4,6 +4,7 @@ import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 import { trackServerEvent } from '@/lib/server-analytics';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
 
@@ -121,5 +122,6 @@ export async function POST(request: Request) {
     });
   }
 
+  invalidateAfterCatalogChange();
   return NextResponse.json({ class: yogaClassToDto(created) }, { status: 201 });
 }

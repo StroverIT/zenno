@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
 import { retreatToDto } from '@/lib/public-studio-dto';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
 
@@ -128,6 +129,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     },
   });
 
+  invalidateAfterCatalogChange(updated.id);
   return NextResponse.json({ retreat: retreatToDto(updated) });
 }
 
@@ -142,5 +144,6 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   if (!access.ok) return access.response;
 
   await prisma.retreat.delete({ where: { id } });
+  invalidateAfterCatalogChange(id);
   return NextResponse.json({ ok: true });
 }

@@ -1,7 +1,8 @@
-import { cache } from "react";
+import { unstable_cache } from 'next/cache';
 import { prisma } from "@/lib/prisma";
 import { studioToDto, yogaClassToDto } from "@/lib/public-studio-dto";
 import type { Studio, YogaClass } from "@/data/mock-data";
+import { CACHE_TAGS } from '@/lib/app-revalidate';
 
 export type PublicCatalog = {
   studios: Studio[];
@@ -31,10 +32,17 @@ async function getPublicCatalogImpl(): Promise<PublicCatalog> {
   };
 }
 
-/** Deduped per React render tree — use from RSC (e.g. discover grid slot). Do not use from Route Handlers. */
-export const getPublicCatalogCached = cache(getPublicCatalogImpl);
+const getPublicCatalogCachedImpl = unstable_cache(getPublicCatalogImpl, ['public-catalog'], {
+  tags: [CACHE_TAGS.publicCatalog],
+  revalidate: 300,
+});
 
-/** Fresh read each call — safe for API routes and one-off RSC usage. */
+/** Cross-request cached catalog for SSR and API consumers. */
+export async function getPublicCatalogCached(): Promise<PublicCatalog> {
+  return getPublicCatalogCachedImpl();
+}
+
+/** Unified catalog read path with tag-based invalidation. */
 export async function getPublicCatalog(): Promise<PublicCatalog> {
-  return getPublicCatalogImpl();
+  return getPublicCatalogCachedImpl();
 }

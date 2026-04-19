@@ -5,8 +5,6 @@ import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { getHomeRetreatById } from '@/lib/home/home-data';
 import RetreatDetail from '@/views/RetreatDetail';
 
-export const dynamic = 'force-dynamic';
-
 type RetreatDetailPageProps = {
   params: Promise<{ id: string }>;
 };

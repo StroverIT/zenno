@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { requireRole } from '@/lib/api-auth';
 import { getDashboardStudiosListForUser, mapStudioResponse } from '@/lib/dashboard-studios-data';
 import { trackServerEvent } from '@/lib/server-analytics';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
 
@@ -153,6 +154,7 @@ export async function POST(request: Request) {
     },
   });
 
+  invalidateAfterCatalogChange();
   return NextResponse.json({
     studio: mapStudioResponse(created),
   });

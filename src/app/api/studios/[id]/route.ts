@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
 
@@ -219,6 +220,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       },
     });
 
+    invalidateAfterCatalogChange();
     return NextResponse.json({ studio: mapStudioResponse(updated) });
   }
 
@@ -254,6 +256,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     data,
   });
 
+  invalidateAfterCatalogChange();
   return NextResponse.json({ studio: mapStudioResponse(updated) });
 }
 
@@ -267,5 +270,6 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
 
   await prisma.studio.delete({ where: { id } });
 
+  invalidateAfterCatalogChange();
   return NextResponse.json({ ok: true });
 }

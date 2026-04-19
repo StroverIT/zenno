@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
 import { scheduleEntryToDto } from '@/lib/public-studio-dto';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
 
@@ -76,6 +77,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
 
   const updated = await prisma.scheduleEntry.update({ where: { id }, data });
+  invalidateAfterCatalogChange();
   return NextResponse.json({ entry: scheduleEntryToDto(updated) });
 }
 
@@ -91,5 +93,6 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   if (!access.ok) return access.response;
 
   await prisma.scheduleEntry.delete({ where: { id } });
+  invalidateAfterCatalogChange();
   return NextResponse.json({ ok: true });
 }
