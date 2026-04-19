@@ -281,6 +281,12 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null }) => {
             >
               Открий студио
             </Link>
+            <Link
+              href="/retreats"
+              className={DESKTOP_NAV_LINK_CLASS}
+            >
+              Рийтрийти
+            </Link>
             {isAuthenticatedNav && user?.role === 'business' && (
               <Link
                 href="/dashboard"
@@ -377,6 +383,14 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null }) => {
                 onClick={closeMobileMenu}
               >
                 Открий студио
+              </Link>
+              <Link
+                href="/retreats"
+                className={MOBILE_ITEM_CLASS}
+                data-mobile-nav-item
+                onClick={closeMobileMenu}
+              >
+                Рийтрийти
               </Link>
               <button
                 type="button"

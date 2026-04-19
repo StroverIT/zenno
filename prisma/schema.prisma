@@ -54,6 +54,7 @@ model User {
   classAttendances UserClassAttendance[]
   bookings       Booking[]
   scheduleEntryBookings ScheduleEntryBooking[]
+  retreatBookings RetreatBooking[]
 }
 
 /// A client user’s completed visit to a scheduled class (used for profile history and spend summary).
@@ -142,9 +143,49 @@ model Studio {
   instructors   Instructor[]
   classes       YogaClass[]
   schedule      ScheduleEntry[]
+  retreats      Retreat[]
   subscription          StudioSubscription?
   subscriptionRequests  SubscriptionRequest[]
   favorites             Favorite[]
+}
+
+model Retreat {
+  id          String   @id @default(cuid())
+  studioId    String
+  studio      Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  title       String
+  description String   @db.Text
+  activities  String[] @default([])
+  images      String[] @default([])
+  address     String
+  lat         Float?
+  lng         Float?
+  startDate   DateTime @db.Date
+  endDate     DateTime @db.Date
+  duration    String
+  maxCapacity Int
+  enrolled    Int      @default(0)
+  price       Float    @default(0)
+  isPublished Boolean  @default(true)
+  isHidden    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  bookings    RetreatBooking[]
+
+  @@index([studioId, startDate])
+  @@index([createdAt(sort: Desc)])
+}
+
+model RetreatBooking {
+  id        String   @id @default(cuid())
+  retreatId String
+  retreat   Retreat  @relation(fields: [retreatId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([retreatId, userId])
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model Instructor {

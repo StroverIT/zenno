@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   Instructor,
+  Retreat,
   ScheduleEntry,
   Studio,
   StudioSubscription,
@@ -18,6 +19,7 @@ type WorkspacePayload = {
   studios: Studio[];
   instructors: Instructor[];
   classes: YogaClass[];
+  retreats: Retreat[];
   schedule: ScheduleEntry[];
   subscriptions: StudioSubscription[];
   subscriptionRequests: SubscriptionRequestDto[];
@@ -72,6 +74,7 @@ export function useDashboardWorkspace() {
     studios: data?.studios ?? [],
     instructors: data?.instructors ?? [],
     classes: data?.classes ?? [],
+    retreats: data?.retreats ?? [],
     schedule: data?.schedule ?? [],
     subscriptions: data?.subscriptions ?? [],
     subscriptionRequests: data?.subscriptionRequests ?? [],

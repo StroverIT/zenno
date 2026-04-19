@@ -1,5 +1,6 @@
 import type {
   Instructor,
+  Retreat,
   Review,
   ScheduleEntry,
   Studio,
@@ -8,6 +9,7 @@ import type {
 } from '@/data/mock-data';
 import type {
   Instructor as PrismaInstructor,
+  Retreat as PrismaRetreat,
   Review as PrismaReview,
   Studio as PrismaStudio,
 } from '@prisma/client';
@@ -91,6 +93,29 @@ export function scheduleEntryToDto(s: PrismaScheduleEntry): ScheduleEntry {
     enrolled: s.enrolled,
     price: s.price,
     isRecurring: s.isRecurring,
+  };
+}
+
+export function retreatToDto(r: PrismaRetreat): Retreat {
+  return {
+    id: r.id,
+    studioId: r.studioId,
+    title: r.title,
+    description: r.description,
+    activities: r.activities ?? [],
+    images: r.images ?? [],
+    address: r.address,
+    lat: r.lat ?? 0,
+    lng: r.lng ?? 0,
+    startDate: r.startDate.toISOString().slice(0, 10),
+    endDate: r.endDate.toISOString().slice(0, 10),
+    duration: r.duration,
+    maxCapacity: r.maxCapacity,
+    enrolled: r.enrolled,
+    price: r.price,
+    isPublished: r.isPublished,
+    isHidden: r.isHidden,
+    createdAt: r.createdAt.toISOString(),
   };
 }
 

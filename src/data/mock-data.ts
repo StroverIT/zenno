@@ -95,6 +95,27 @@ export interface ScheduleEntry {
   isRecurring: boolean; // true = weekly recurring
 }
 
+export interface Retreat {
+  id: string;
+  studioId: string;
+  title: string;
+  description: string;
+  activities: string[];
+  images: string[];
+  address: string;
+  lat: number;
+  lng: number;
+  startDate: string;
+  endDate: string;
+  duration: string;
+  maxCapacity: number;
+  enrolled: number;
+  price: number;
+  isPublished: boolean;
+  isHidden: boolean;
+  createdAt: string;
+}
+
 export interface StudioSubscription {
   studioId: string;
   hasMonthlySubscription: boolean;

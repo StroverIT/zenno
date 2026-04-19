@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Building2, CalendarDays, GraduationCap, LayoutDashboard, BookOpen } from 'lucide-react';
+import { Building2, CalendarDays, GraduationCap, LayoutDashboard, BookOpen, Palmtree } from 'lucide-react';
 import { DASHBOARD_PATHS, type Section } from '../dashboardTypes';
 
 const navItems: { key: Section; label: string; icon: React.ElementType }[] = [
@@ -8,6 +8,7 @@ const navItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: 'instructors', label: 'Инструктори', icon: GraduationCap },
   { key: 'classes', label: 'Класове', icon: BookOpen },
   { key: 'schedule', label: 'Разписание', icon: CalendarDays },
+  { key: 'retreats', label: 'Рийтрийти', icon: Palmtree },
 ];
 
 export function DashboardMobileNav({

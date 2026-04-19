@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { listStudioIdsForActor, requireRole } from '@/lib/api-auth';
 import {
   instructorToDto,
+  retreatToDto,
   scheduleEntryToDto,
   studioToDto,
   subscriptionToDto,
@@ -26,6 +27,7 @@ export async function GET() {
       studios: [],
       instructors: [],
       classes: [],
+      retreats: [],
       schedule: [],
       subscriptions: [],
       subscriptionRequests: [],
@@ -39,6 +41,7 @@ export async function GET() {
     studios,
     instructors,
     classes,
+    retreats,
     schedule,
     subscriptions,
     subscriptionRequests,
@@ -57,6 +60,10 @@ export async function GET() {
     prisma.yogaClass.findMany({
       where: { studioId: { in: studioIds } },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+    }),
+    prisma.retreat.findMany({
+      where: { studioId: { in: studioIds } },
+      orderBy: [{ createdAt: 'desc' }, { startDate: 'asc' }],
     }),
     prisma.scheduleEntry.findMany({
       where: { studioId: { in: studioIds } },
@@ -77,6 +84,7 @@ export async function GET() {
     studios: studios.map(studioToDto),
     instructors: instructors.map(instructorToDto),
     classes: classes.map(yogaClassToDto),
+    retreats: retreats.map(retreatToDto),
     schedule: schedule.map(scheduleEntryToDto),
     subscriptions: subscriptions.map(subscriptionToDto),
     subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
